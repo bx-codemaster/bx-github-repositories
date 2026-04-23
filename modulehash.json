@@ -3,27 +3,25 @@
     "scopes": {
         "shop-root": {
             "hashes": {
-                "/admin/bx_github_repositories.php": "7857129aa94c2cdfc07f164031d38359",
+                "/admin/bx_github_repositories.php": "7d3a319b47002f8ee836b9672a9f48ca",
                 "/admin/images/icons/heading/bx_github_repositories.png": "5a6d75b7efa4c9530133c2c022e559f8",
-                "/admin/includes/classes/bx_github_repositories_app_manager.php": "924876d8c696f9b493980fb1a895b3b1",
+                "/admin/includes/classes/bx_github_repositories_app_manager.php": "69eab803163c75de64715a03755208db",
                 "/admin/includes/classes/bx_github_repositories_client_factory.php": "188c83ca9669cf846e99c9e6cb6be5ea",
                 "/admin/includes/classes/bx_github_repositories_crypto.php": "1ad07c4280843064c60c9eaf8ca49dfe",
                 "/admin/includes/classes/bx_github_repositories_helpers.php": "cdbbd20f8b1e89624435f81d6306eb79",
                 "/admin/includes/classes/bx_github_repositories_jwt_provider.php": "e778b3e4d8b3f6aa61cd7c67c7d1df1f",
-                "/admin/includes/extra/css/bx_github_repositories.php": "d5593ae1b64d3175db91fb5c77c73845",
-                "/admin/includes/extra/database_tables/bx_github_repositories.php": "abe2d7642d1e8ddbf9c0117237feaa04",
+                "/admin/includes/extra/css/bx_github_repositories.php": "84f9a323b090a47fa7906cb35a7d23e8",
                 "/admin/includes/extra/filenames/bx_github_repositories.php": "f39b90acc7a5642c2338e201516f082e",
+                "/admin/includes/extra/javascript/bx_github_repositories.php": "c26fc7b9ea3fcd85c9d75dbbbc7557db",
                 "/admin/includes/extra/menu/bx_github_repositories.php": "f323158c80f0089322a8ae3bd2299062",
-                "/admin/includes/modules/system/bx_github_repositories.php": "511a912622fdd533ac33086480607205",
-                "/includes/configure/bx_github_repositories.php": "38559ac29c3a3bcfc66ce90d2861a26d",
-                "/includes/extra/configure/bx_github_repositories.php": "e3d271a82d22096aecdc299a953892c4",
-                "/lang/english/extra/admin/bx_github_repositories.php": "1a117cff67cfb8fa961f1a680c667895",
-                "/lang/english/extra/bx_github_repositories.php": "7f2a37790e9a1a81801c61474bcf2ea7",
+                "/admin/includes/modules/system/bx_github_repositories.php": "47db6ea1d4558dd9ac4c80170266bc10",
+                "/includes/extra/configure/bx_github_repositories.php": "4ed4bc6041f5b4223e9fef0b96ec5efd",
+                "/includes/extra/database_tables/bx_github_repositories.php": "f93a9551a4b3fcc99a5f50f8346af766",
+                "/lang/english/extra/admin/bx_github_repositories.php": "bd9d36bf50e34a61ca76bafcd4683944",
                 "/lang/english/modules/system/bx_github_repositories.php": "2b6439b3b0138b466545488167139d53",
-                "/lang/german/extra/admin/bx_github_repositories.php": "ea144141831c03932ce7a33f57702e48",
-                "/lang/german/extra/bx_github_repositories.php": "727c25b9fe69b7e43cddd75f7340fa14",
-                "/lang/german/modules/system/bx_github_repositories.php": "bef02a5c03d4de21ecb363b014903af8",
-                "/tests/bx_github_repositories_auth_smoke_test.php": "35e151e2f2e0be3d24cccc0a78548b0b"
+                "/lang/german/extra/admin/bx_github_repositories.php": "535d7559680b1f8fc12080a251096a1c",
+                "/lang/german/modules/system/bx_github_repositories.php": "696cc41431e17bfb4142e16bb7f1b33d",
+                "/tests/bx_github_repositories_auth_smoke_test.php": "7b3d2d7b87c3e8a31e72d1fa1e413050"
             }
         },
         "shop-vendor-mmlc": {

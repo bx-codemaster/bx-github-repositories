@@ -27,6 +27,15 @@ define('MODULE_BX_GITHUB_REPOSITORIES_API_RETRY_COUNT_DESC', 'Anzahl der API-Wie
 define('MODULE_BX_GITHUB_REPOSITORIES_AUTH_DEBUG_TITLE', 'Auth Debug Logging');
 define('MODULE_BX_GITHUB_REPOSITORIES_AUTH_DEBUG_DESC', 'Aktiviert optionales Debug-Logging bei fehlgeschlagener GitHub App Authentifizierung vor PAT-Fallback.');
 
+define('MODULE_BX_GITHUB_REPOSITORIES_APP_ID_TITLE', 'GitHub App ID');
+define('MODULE_BX_GITHUB_REPOSITORIES_APP_ID_DESC', 'Die ID der GitHub App.');
+
+define('MODULE_BX_GITHUB_REPOSITORIES_INSTALLATION_ID_TITLE', 'GitHub Installation ID');
+define('MODULE_BX_GITHUB_REPOSITORIES_INSTALLATION_ID_DESC', 'Die Installation ID der GitHub App.');
+
+define('MODULE_BX_GITHUB_REPOSITORIES_PRIVATE_KEY_ENCRYPTED_TITLE', 'GitHub Private Key (verschlüsselt)');
+define('MODULE_BX_GITHUB_REPOSITORIES_PRIVATE_KEY_ENCRYPTED_DESC', 'Der verschlüsselte private Schlüssel der GitHub App.');
+
 define('CFG_TXT_HOURLY', 'Stündlich');
 define('CFG_TXT_DAILY', 'Täglich');
 define('CFG_TXT_WEEKLY', 'Wöchentlich');

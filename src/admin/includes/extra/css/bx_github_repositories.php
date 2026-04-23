@@ -21,7 +21,6 @@
 ?>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
-
   #headboard {
     display: flex; 
     flex-direction: row; 
@@ -37,6 +36,14 @@
 
   #headboard .main {
     margin: 5px 10px;
+  }
+
+  #github_private_key {
+    width: 100%; 
+    max-width: 680px; 
+    background-color: #fafafa; 
+    border-color: #c6c6c6 #dadada #eaeaea; 
+    color:#777;
   }
 
   .fixed_messageStack {
@@ -55,6 +62,42 @@
     text-align: center;    
     /* Wichtig: Standardmäßig ausgeblendet */
     display: none;
+  }
+
+    .tabs .tab-nav {
+    list-style: none; 
+    padding: 0;
+    display: flex;
+    gap: 6px;
+    margin:0;
+  }
+  .tabs .tab-nav li a {
+    padding: 6px 10px;
+    background: #f1f1f1;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    display: inline-block;
+    border-radius: 4px 4px 0 0;
+    text-decoration: none;
+    color: #222;
+  }
+  .tabs .tab-nav li a.active {
+    background: #AF417E;
+    color: #fff;
+    font-weight: bold;
+  }
+  .tabs .tab-content {
+    border-top: 1px solid #ccc;
+  }
+  .tabs .tab-content > div {
+    display: none;
+    padding: 5px;
+    border: 1px solid #ccc;
+    background: #fff;
+    border-top: none;
+  }
+  .tabs .tab-content > div.active {
+    display: block;
   }
   
   .error_message,

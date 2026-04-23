@@ -45,13 +45,13 @@ function fail($message, $context = [])
 try {
     $crypto = new bx_github_repositories_crypto();
 
-    $private_key = $crypto->decryptToken(BX_GITHUB_REPOSITORIES_PRIVATE_KEY_ENCRYPTED);
+    $private_key = $crypto->decryptToken(MODULE_BX_GITHUB_REPOSITORIES_PRIVATE_KEY_ENCRYPTED);
     if ($private_key === '') {
         fail('Private Key konnte nicht entschluesselt werden.');
     }
 
     $normalized_private_key = bx_github_repositories_jwt_provider::normalizePrivateKey($private_key);
-    $jwt = bx_github_repositories_jwt_provider::buildJWT(BX_GITHUB_REPOSITORIES_APP_ID, $normalized_private_key);
+    $jwt = bx_github_repositories_jwt_provider::buildJWT(MODULE_BX_GITHUB_REPOSITORIES_APP_ID, $normalized_private_key);
 
     if (count(explode('.', $jwt)) !== 3) {
         fail('JWT hat nicht das erwartete 3-teilige Format.');
@@ -75,8 +75,8 @@ try {
     echo json_encode([
         'ok' => true,
         'message' => 'GitHub App Authentifizierung erfolgreich.',
-        'app_id' => BX_GITHUB_REPOSITORIES_APP_ID,
-        'installation_id' => BX_GITHUB_REPOSITORIES_INSTALLATION_ID,
+        'app_id' => MODULE_BX_GITHUB_REPOSITORIES_APP_ID,
+        'installation_id' => MODULE_BX_GITHUB_REPOSITORIES_INSTALLATION_ID,
         'jwt_parts' => count(explode('.', $jwt)),
         'installation_token_prefix' => substr($installation_token, 0, 6),
         'rate_limit' => [

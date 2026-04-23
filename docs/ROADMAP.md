@@ -1,5 +1,29 @@
 # BX Github Repositories - Roadmap
 
+## Milestone-Status
+
+### Milestone M1 - Installierbar und Credential-Setup produktiv
+Status: Erreicht
+
+Ergebnis:
+- Modul ist installierbar und lauffähig im Shop.
+- Shopbetreiber kann GitHub App ID, Installation ID und PEM-Key im Setup-Assistenten erfassen.
+- PEM wird serverseitig validiert und nur verschlüsselt gespeichert.
+- Verbindungstest (JWT -> Installation Token) ist vorhanden.
+- Detaillierte Shopbetreiber-Dokumentation für die Erzeugung der benötigten GitHub-Credentials liegt vor.
+
+## Release-Notiz M1 (Changelog/Tag)
+
+Kurztext:
+- Milestone M1 erreicht: Modul ist installierbar und das Credential-Setup produktiv nutzbar.
+
+Tag-Beschreibung (Vorschlag):
+- M1: Installierbares Grundmodul mit produktivem GitHub Credential-Setup
+- Setup-Assistent fuer App ID, Installation ID und PEM-Upload vorhanden
+- PEM wird serverseitig validiert und nur verschluesselt gespeichert
+- Verbindungstest (JWT -> Installation Token) integriert
+- Shopbetreiber-Dokumentation fuer GitHub-App-Einrichtung und Betrieb liegt vor
+
 ## Ziel
 Käufer erhalten immer die neueste Version eines zugewiesenen Download-Produkts, für 2 Jahre ab Kaufdatum. Bei neuer Version werden berechtigte Käufer per E-Mail informiert.
 
@@ -13,6 +37,7 @@ Käufer erhalten immer die neueste Version eines zugewiesenen Download-Produkts,
 - Quelle: GitHub Releases API via Latest-Release-Endpunkt.
 - Synchronisation: Scheduled Task im modified-Mechanismus.
 - Datenhaltung: Eigene Modultabellen, keine invasive Core-Erweiterung.
+- Credential-Management: App ID, Installation ID und Private Key je Shop in der Datenbank; Private Key nur verschlüsselt.
 - Auslieferung: Stabiler Dateiname im Download-Verzeichnis, atomar ersetzt.
 - Benachrichtigung: Queue-basierter Mailversand in Batches.
 
@@ -128,6 +153,10 @@ Hinweis:
 - Auto-Notify
 
 ### Bereich 2: Repository bearbeiten
+- Alle Repositories der GitHub-App-Installation erfassen und als Auswahlliste anzeigen
+- Credentials im Setup-Flow erfassen: App ID, Installation ID, Private-Key-Upload (PEM)
+- PEM serverseitig validieren, verschlüsseln und nur verschlüsselt speichern
+- Private Key nach dem Speichern nie im Klartext erneut anzeigen
 - owner_name, repo_name
 - Produkt und Download-Attribut
 - Asset-Pattern
@@ -144,6 +173,29 @@ Hinweis:
 - Versandfehler
 - Anzahl benachrichtigter Käufer
 
+## Credential-Setup und Speicherung (Detail)
+
+### Ziel
+- Shopbetreiber trägt App ID und Installation ID im Admin ein.
+- Shopbetreiber lädt die erzeugte PEM-Datei hoch.
+- Das Modul liest den PEM-Inhalt aus, validiert ihn, verschlüsselt ihn und speichert ihn in der Datenbank.
+
+### Ablauf
+1. User lädt PEM-Datei im Admin-Formular hoch.
+2. Server liest den Dateiinhalt ein (kein Persistieren im Webroot).
+3. Formatprüfung auf gültigen Private-Key-Block (BEGIN/END ... PRIVATE KEY).
+4. Verschlüsselung mit Modul-Crypto.
+5. Speicherung in TABLE_CONFIGURATION als verschlüsselter Wert.
+6. Temporäre Upload-Datei wird sofort gelöscht.
+7. Verbindungstest (JWT -> Installation Token) validiert die gespeicherten Werte.
+
+### Sicherheitsanforderungen
+- Nur Datei-Upload mit zusätzlicher Inhaltsvalidierung (Dateiendung allein reicht nicht).
+- Größenlimit für PEM-Datei setzen.
+- Kein Logging sensibler Schlüsselinhalte.
+- Klartext-PEM niemals zurück an UI ausgeben.
+- Bestehende Dateikonstanten nur als Migrations-Fallback, danach entfernen.
+
 ## Implementierungs-Roadmap
 
 ### Phase 1 - Modulgrundlage
@@ -159,7 +211,8 @@ Hinweis:
 
 ### Phase 3 - Dateisynchronisation
 - Stream-Download in temporäre Datei.
-- Atomarer Austausch der stabilen Zieldatei.
+- ZIP im Shop-Ordner download speichern (stabiler lokaler Dateiname).
+- Atomarer Austausch der stabilen Zieldatei im Zielordner.
 - Logging und Rollback bei Fehlern.
 
 ### Phase 4 - Berechtigungsprüfung 2 Jahre
@@ -173,6 +226,10 @@ Hinweis:
 
 ### Phase 6 - Admin-UI
 - Listenansicht, Detailmaske, Historie.
+- Setup-Flow: Repositories der Installation einlesen und gezielt auswählen.
+- Setup-Flow: App ID, Installation ID und PEM-Datei im Admin erfassen.
+- PEM-Upload verarbeiten (Validierung -> Verschlüsselung -> DB-Speicherung).
+- DB-first-Konfigurationslesung für Auth aktivieren (Dateikonstanten nur temporärer Fallback).
 - Manuelle Aktionen: Check jetzt, Download jetzt, Testmail.
 
 ### Phase 7 - Hardening
@@ -189,7 +246,7 @@ Hinweis:
 - [x] Datenbanktabellen-Definitionen anlegen: src/admin/includes/extra/database_tables/bx_github_repositories.php
 - [x] Dateinamen-Konstanten anlegen: src/admin/includes/extra/filenames/bx_github_repositories.php
 - [x] Menüeintrag anlegen: src/admin/includes/extra/menu/bx_github_repositories.php
-- [x] Sprachdateien DE/EN anlegen: src/lang/german/extra/bx_github_repositories.php, src/lang/english/extra/bx_github_repositories.php
+- [x] Sprachdateien DE/EN anlegen: src/lang/german/extra/admin/bx_github_repositories.php, src/lang/english/extra/admin/bx_github_repositories.php
 
 ### Phase 2 - GitHub-Client
 - [x] Auth-Serviceklassen anlegen: src/admin/includes/classes/bx_github_repositories_client_factory.php, src/admin/includes/classes/bx_github_repositories_app_manager.php, src/admin/includes/classes/bx_github_repositories_jwt_provider.php
@@ -198,9 +255,9 @@ Hinweis:
 - [x] Live-Smoke-Test für Authentifizierung ergänzen: src/tests/bx_github_repositories_auth_smoke_test.php
 
 ### Phase 3 - Dateisynchronisation
-- [ ] Download-Service anlegen (Temp-Datei, atomares Rename): src/admin/includes/classes/bx_github_repositories_downloader.php
+- [ ] Download-Service anlegen (Temp-Datei, atomares Rename in den Shop-Ordner download): src/admin/includes/classes/bx_github_repositories_downloader.php
 - [ ] Dateisystem-Helfer anlegen (Locking/Pfadprüfung): src/admin/includes/classes/bx_github_repositories_fs.php
-- [ ] Import-Logik in Worker integrieren: src/api/scheduled_tasks/modules/github_repositories_check.php
+- [ ] Import-Logik in Worker integrieren (ZIP-Asset aus Release in download speichern): src/api/scheduled_tasks/modules/github_repositories_check.php
 
 ### Phase 4 - 2-Jahres-Berechtigung
 - [ ] Download-Gate in den Downloadfluss einhängen: src/includes/extra/modules/download/download_before_send/bx_github_repositories.php
@@ -214,7 +271,12 @@ Hinweis:
 
 ### Phase 6 - Admin-UI
 - [ ] Listenansicht/Filter in Adminseite implementieren: src/admin/bx_github_repositories.php
-- [ ] Bearbeitungsformular für Repository-Mapping hinzufügen: src/admin/bx_github_repositories.php
+- [ ] Setup-/Bearbeitungsformular für Repository-Mapping hinzufügen (inkl. Repository-Erfassung der Installation): src/admin/bx_github_repositories.php
+- [x] Upload-Feld für PEM-Datei ergänzen und Multipart-Handling implementieren: src/admin/bx_github_repositories.php
+- [x] Serverseitige PEM-Validierung und Verschlüsselung beim Speichern ergänzen: src/admin/bx_github_repositories.php, src/admin/includes/classes/bx_github_repositories_crypto.php
+- [x] DB-Konfigurationskeys für App ID, Installation ID und verschlüsselten Private Key ergänzen: src/admin/includes/modules/system/bx_github_repositories.php
+- [x] Auth-Layer auf DB-first umstellen (Fallback nur für Migration): src/admin/includes/classes/bx_github_repositories_app_manager.php
+- [x] Migrationsschritt von Dateikonstanten in DB dokumentieren und umsetzen: src/includes/extra/configure/bx_github_repositories.php, docs/INSTALLATION_SHOPBETREIBER.md
 - [ ] Historie und Queue-Status integrieren: src/admin/bx_github_repositories.php
 
 ### Phase 7 - Hardening und Betrieb

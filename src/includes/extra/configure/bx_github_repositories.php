@@ -1,5 +1,4 @@
 <?php
-
 /**
  * includes/extra/configure/bx_github_repositories.php
  * BX GitHub Repositories - Security Configuration
@@ -14,3 +13,10 @@
 
 defined('BX_GITHUB_REPOSITORIES_CRYPTO_KEY') or define('BX_GITHUB_REPOSITORIES_CRYPTO_KEY', 'c91d7e4a8f2b6035d4ab1c9e76f03d82b7e91a4c2d5f60b8a1c3e7d4f9260ab5');
 
+/**
+ * Token-Caching (Runtime Memory)
+ * 
+ * Installation Access Tokens sind ~1h gültig. Sie werden zur Laufzeit gecacht.
+ * Speicher: $GLOBALS['bx_github_token_cache']
+ * Format: ['token' => 'ghu_xxx', 'expires_at' => unix_timestamp, 'generated_at' => unix_timestamp]
+ */

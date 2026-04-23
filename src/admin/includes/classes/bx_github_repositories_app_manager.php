@@ -1,5 +1,4 @@
 <?php
-
 /**
  * GitHub App Manager
  * 
@@ -36,9 +35,15 @@ class bx_github_repositories_app_manager
     public function getInstallationAccessToken()
     {
         // App-Credentials aus Config
-        $app_id = BX_GITHUB_REPOSITORIES_APP_ID ?? null;
-        $installation_id = BX_GITHUB_REPOSITORIES_INSTALLATION_ID ?? null;
-        $private_key_encrypted = BX_GITHUB_REPOSITORIES_PRIVATE_KEY_ENCRYPTED ?? null;
+        $app_id = defined('MODULE_BX_GITHUB_REPOSITORIES_APP_ID')
+            ? constant('MODULE_BX_GITHUB_REPOSITORIES_APP_ID')
+            : null;
+        $installation_id = defined('MODULE_BX_GITHUB_REPOSITORIES_INSTALLATION_ID')
+            ? constant('MODULE_BX_GITHUB_REPOSITORIES_INSTALLATION_ID')
+            : null;
+        $private_key_encrypted = defined('MODULE_BX_GITHUB_REPOSITORIES_PRIVATE_KEY_ENCRYPTED')
+            ? constant('MODULE_BX_GITHUB_REPOSITORIES_PRIVATE_KEY_ENCRYPTED')
+            : null;
 
         if (!$app_id || !$installation_id || !$private_key_encrypted) {
             throw new Exception('GitHub App ist nicht konfiguriert (App ID / Installation ID / Private Key fehlen)');
@@ -129,7 +134,6 @@ class bx_github_repositories_app_manager
 
         $response_json = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         if ($http_code !== 201) {
             throw new Exception("GitHub Token Exchange fehlgeschlagen (HTTP {$http_code}): {$response_json}");

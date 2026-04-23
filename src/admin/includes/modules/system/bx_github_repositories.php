@@ -167,6 +167,47 @@ class bx_github_repositories {
                                             'xtc_cfg_select_option(array(\'True\', \'False\'), ',  
                                             now())");
 
+    xtc_db_query("
+    INSERT INTO " . TABLE_CONFIGURATION . " (configuration_key, 
+                                             configuration_value, 
+                                             configuration_group_id, 
+                                             sort_order, 
+                                             set_function, 
+                                             date_added)
+                                    VALUES ('MODULE_BX_GITHUB_REPOSITORIES_APP_ID', 
+                                            '', 
+                                            '6', 
+                                            '9',
+                                            '".self::class."->configurationFieldVersion',  
+                                            now())");
+
+    xtc_db_query("
+    INSERT INTO " . TABLE_CONFIGURATION . " (configuration_key, 
+                                             configuration_value, 
+                                             configuration_group_id, 
+                                             sort_order, 
+                                             set_function, 
+                                             date_added)
+                                    VALUES ('MODULE_BX_GITHUB_REPOSITORIES_INSTALLATION_ID', 
+                                            '', 
+                                            '6', 
+                                            '10',  
+                                            '".self::class."->configurationFieldVersion',  
+                                            now())");
+
+    xtc_db_query("
+    INSERT INTO " . TABLE_CONFIGURATION . " (configuration_key, 
+                                             configuration_value, 
+                                             configuration_group_id, 
+                                             sort_order, 
+                                             set_function,
+                                             date_added)
+                                    VALUES ('MODULE_BX_GITHUB_REPOSITORIES_PRIVATE_KEY_ENCRYPTED', 
+                                            '', 
+                                            '6', 
+                                            '11', 
+                                            '".self::class."->configurationFieldVersion',   
+                                            now())");
 
     xtc_db_query("CREATE TABLE IF NOT EXISTS bx_github_repositories (
       repositories_id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -272,6 +313,9 @@ class bx_github_repositories {
       'MODULE_BX_GITHUB_REPOSITORIES_API_RETRY_DELAY',
       'MODULE_BX_GITHUB_REPOSITORIES_API_RETRY_COUNT',
       'MODULE_BX_GITHUB_REPOSITORIES_AUTH_DEBUG',
+      'MODULE_BX_GITHUB_REPOSITORIES_APP_ID',
+      'MODULE_BX_GITHUB_REPOSITORIES_INSTALLATION_ID',  
+      'MODULE_BX_GITHUB_REPOSITORIES_PRIVATE_KEY_ENCRYPTED'
     );
   }
 
@@ -291,5 +335,17 @@ class bx_github_repositories {
     $check_query = xtc_db_query("SELECT tasks_id FROM " . TABLE_SCHEDULED_TASKS . " WHERE tasks = '" . $task_name . "' LIMIT 1");
 
     return xtc_db_num_rows($check_query) > 0;
+  }
+
+  /**
+    * Action to perform when the configuration key '_VERSION' is being displayed.
+    *
+    * @param string $value
+    * @param string $constant
+    *
+    * @return string
+    */
+  public function configurationFieldVersion(string $value, string $constant): string {
+    return xtc_draw_input_field( 'configuration['.$constant.']', $value, 'readonly="true" style="opacity: 0.4;"');
   }
 }

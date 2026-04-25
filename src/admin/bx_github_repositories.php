@@ -811,20 +811,20 @@ require_once(DIR_WS_INCLUDES . 'head.php');
                 </div> <!-- #tab-repos -->
 
                 <div id="tab-manual" role="tabpanel" aria-labelledby="tab-link-manual" tabindex="0" hidden="hidden">
-                  <div class="main bx-gh-section-heading bx-gh-manual-heading">
-                    <strong><?php echo BX_GITHUB_REPOSITORIES_TEXT_MANUAL_HEADING; ?></strong>
-                  </div>
-                  <div class="main bx-gh-manual-text">
-                    <?php echo BX_GITHUB_REPOSITORIES_TEXT_MANUAL_INTRO; ?>
-                  </div>
-                  <div class="main bx-gh-manual-text">
-                    <?php echo BX_GITHUB_REPOSITORIES_TEXT_MANUAL_TAG_REQUIREMENT; ?>
-                  </div>
-                  <pre class="bx-gh-manual-code"><code>git tag -a v2.0.5 -m "BX Products Video v2.0.5"
+                    <div class="main bx-gh-section-heading bx-gh-manual-heading">
+                      <strong><?php echo BX_GITHUB_REPOSITORIES_TEXT_MANUAL_HEADING; ?></strong>
+                    </div>
+                    <div class="main bx-gh-manual-text">
+                      <?php echo BX_GITHUB_REPOSITORIES_TEXT_MANUAL_INTRO; ?>
+                    </div>
+                    <div class="main bx-gh-manual-text">
+                      <?php echo BX_GITHUB_REPOSITORIES_TEXT_MANUAL_TAG_REQUIREMENT; ?>
+                    </div>
+                    <pre class="bx-gh-manual-code"><code>git tag -a v2.0.5 -m "BX Products Video v2.0.5"
 git push origin v2.0.5</code></pre>
-                  <div class="main bx-gh-manual-text bx-gh-text-soft-dark">
-                    <?php echo BX_GITHUB_REPOSITORIES_TEXT_MANUAL_LOCATION_HINT; ?>
-                  </div>
+                    <div class="main bx-gh-manual-text bx-gh-text-soft-dark">
+                      <?php echo BX_GITHUB_REPOSITORIES_TEXT_MANUAL_LOCATION_HINT; ?>
+                    </div>
                 </div> <!-- #tab-manual -->
 
               </div> <!-- .tab-content -->
@@ -871,11 +871,25 @@ git push origin v2.0.5</code></pre>
 
               <div id="tab-manual-right" role="tabpanel" aria-labelledby="tab-link-manual" tabindex="0" hidden="hidden">
 <?php
+
+  $manual_language_code = strtoupper($_SESSION['language_code'] ?? 'DE');
+/** pub/INSTALLATION_SHOP_OPERATOR_DE.pdf */
+  $manual_download_file = rawurlencode('INSTALLATION_SHOP_OPERATOR_' . $manual_language_code . '.pdf');
+  $manual_download_path = 'pub/';
+  $manual_download_url  = xtc_href_link_admin($manual_download_path . $manual_download_file);
+
+  if (is_file(DIR_FS_CATALOG . $manual_download_path . $manual_download_file)) {
+    $manual_download_link_html = '<a href="' . htmlspecialchars($manual_download_url, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener noreferrer">' . htmlspecialchars($manual_download_file, ENT_QUOTES, 'UTF-8') . '</a>';
+  } else {
+    $manual_download_link_html = '<p style="margin: 0;">Datei fehlt</p>';
+  }
+
   $heading  = array();
   $contents = array();
 
   $heading[]  = array('text' => '<strong>'.BX_GITHUB_REPOSITORIES_TEXT_MANUAL_HEADING.'</strong>');
   $contents[] = array('text' => BX_GITHUB_REPOSITORIES_TEXT_MANUAL_RIGHT_HELP);
+  $contents[] = array('text' => $manual_download_link_html);
 
   if ( (xtc_not_null($heading)) && (xtc_not_null($contents)) ) {
     $box = new box;

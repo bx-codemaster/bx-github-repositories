@@ -1,0 +1,28 @@
+<h3>Manual for shop operators</h3>
+<p>This module connects your shop to a GitHub App. Then you load repositories, activate the required entries, and sync ZIP files into the <strong>download</strong> folder.</p>
+
+<h4>Quick start</h4>
+<ol>
+  <li>Open the setup assistant and enter App ID, Installation ID, and PEM file.</li>
+  <li>Save settings and test the connection.</li>
+  <li>Load/update repositories.</li>
+  <li>Activate required repositories and save the selection.</li>
+  <li>Download releases or update ZIP per repository.</li>
+</ol>
+
+<h4>Important note about tags</h4>
+<p>Each repository needs at least one version tag (for example <code>v2.0.5</code>). Without a tag, no ZIP file can be downloaded.</p>
+<pre><code>git tag -a v2.0.5 -m "BX Products Video v2.0.5"
+git push origin v2.0.5</code></pre>
+
+<h4>ZIP status in the tab</h4>
+<ul>
+  <li>Green dot: ZIP exists in the download folder.</li>
+  <li>Red dot: ZIP is missing, download is recommended.</li>
+  <li>Red download button: download is required for an active repository.</li>
+</ul>
+
+<h4>Download link in table</h4>
+<p>The local file name is clickable and uses the admin endpoint for secure downloads from the download folder.</p>
+
+<p><strong>Full guide:</strong> INSTALLATION_SHOP_OPERATOR_DE.md or INSTALLATION_SHOP_OPERATOR_DE.pdf in the module docs folder.</p>

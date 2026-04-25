@@ -43,7 +43,7 @@ define('BX_GITHUB_REPOSITORIES_TEXT_LOADING_NOTE', 'The page is working in the b
 define('BX_GITHUB_REPOSITORIES_TEXT_MANUAL_HEADING', 'Manual for shop operators');
 define('BX_GITHUB_REPOSITORIES_TEXT_MANUAL_INTRO', 'This module connects your shop to a GitHub App. Then you load repositories, activate the required entries, and sync ZIP files into the &quot;download&quot; folder.');
 define('BX_GITHUB_REPOSITORIES_TEXT_MANUAL_TAG_REQUIREMENT', 'Important: Each repository needs at least one version tag (for example <code>v2.0.5</code>). Without a tag, no ZIP file can be downloaded.');
-define('BX_GITHUB_REPOSITORIES_TEXT_MANUAL_LOCATION_HINT', 'Full guide: INSTALLATION_SHOPBETREIBER.md or INSTALLATION_SHOPBETREIBER.pdf in the module docs folder.');
+define('BX_GITHUB_REPOSITORIES_TEXT_MANUAL_LOCATION_HINT', 'Full guide: INSTALLATION_SHOP_OPERATOR_EN.pdf.');
 define('BX_GITHUB_REPOSITORIES_TEXT_SETUP_RIGHT_HELP', '<h4 style="margin-top: 0;">Quick help:</h4><p>Enter App ID, Installation ID, and upload the PEM file.</p><p>Save the settings.</p><p>Then test the connection.</p>');
 define('BX_GITHUB_REPOSITORIES_TEXT_MANUAL_RIGHT_HELP', 'Use the manual tab for the full step-by-step guide including the mandatory version tag for ZIP downloads.');
 define('BX_GITHUB_REPOSITORIES_TEXT_UNKNOWN_GITHUB_RESPONSE', 'Unknown response from GitHub');

@@ -245,6 +245,74 @@
     overflow: auto;
   }
 
+  .bx-gh-manual-rich {
+    line-height: 1.55;
+    color: #333;
+  }
+
+  .bx-gh-manual-rich h3,
+  .bx-gh-manual-rich h4 {
+    margin: 12px 0 8px;
+    color: #202020;
+  }
+
+  .bx-gh-manual-rich p,
+  .bx-gh-manual-rich ul,
+  .bx-gh-manual-rich ol,
+  .bx-gh-manual-rich pre {
+    margin: 0 0 10px;
+  }
+
+  .bx-gh-manual-rich ul,
+  .bx-gh-manual-rich ol {
+    padding-left: 22px;
+  }
+
+  .bx-gh-manual-rich pre {
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+    padding: 8px;
+    overflow: auto;
+  }
+
+  .bx-gh-manual-rich code {
+    font-family: Consolas, "Courier New", monospace;
+  }
+
+  .bx-gh-manual-rich {
+    line-height: 1.55;
+    color: #333;
+  }
+
+  .bx-gh-manual-rich h3,
+  .bx-gh-manual-rich h4 {
+    margin: 12px 0 8px;
+    color: #202020;
+  }
+
+  .bx-gh-manual-rich p,
+  .bx-gh-manual-rich ul,
+  .bx-gh-manual-rich ol,
+  .bx-gh-manual-rich pre {
+    margin: 0 0 10px;
+  }
+
+  .bx-gh-manual-rich ul,
+  .bx-gh-manual-rich ol {
+    padding-left: 22px;
+  }
+
+  .bx-gh-manual-rich pre {
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+    padding: 8px;
+    overflow: auto;
+  }
+
+  .bx-gh-manual-rich code {
+    font-family: Consolas, "Courier New", monospace;
+  }
+
   .fixed_messageStack {
     /* 1. Aus dem Dokumentenfluss nehmen */
     position: fixed; 

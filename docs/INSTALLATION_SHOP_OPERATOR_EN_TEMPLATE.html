@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>INSTALLATION_SHOP_OPERATOR_EN</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 16mm;
+    }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11pt;
+      line-height: 1.45;
+      color: #1b1b1b;
+      margin: 0;
+    }
+    h1, h2, h3 {
+      margin: 0 0 8px;
+      line-height: 1.25;
+      color: #111;
+    }
+    h1 {
+      font-size: 20pt;
+      margin-bottom: 14px;
+      border-bottom: 2px solid #333;
+      padding-bottom: 6px;
+    }
+    h2 {
+      font-size: 15pt;
+      margin-top: 18px;
+    }
+    h3 {
+      font-size: 12.5pt;
+      margin-top: 14px;
+    }
+    p {
+      margin: 0 0 9px;
+    }
+    ul, ol {
+      margin: 0 0 10px 20px;
+      padding: 0;
+    }
+    li {
+      margin: 0 0 4px;
+    }
+    code, pre {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 10pt;
+    }
+    pre {
+      background: #f4f4f4;
+      border: 1px solid #d9d9d9;
+      padding: 8px;
+      overflow: hidden;
+      white-space: pre-wrap;
+      margin: 8px 0 10px;
+    }
+    hr {
+      border: 0;
+      border-top: 1px solid #ddd;
+      margin: 14px 0;
+    }
+    .muted {
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <h1>BX GitHub Repositories</h1>
+  <h2>Manual for Shop Operators</h2>
+
+  <h3>Purpose of this guide</h3>
+  <p>This guide describes how to set up the BX GitHub Repositories module for production use.</p>
+  <p>After completing these steps, your shop can:</p>
+  <ul>
+    <li>access its own GitHub repositories,</li>
+    <li>retrieve release ZIP files,</li>
+    <li>store ZIP files in the shop folder <code>download</code>,</li>
+    <li>and use only the repositories approved for that specific shop.</li>
+  </ul>
+
+  <hr>
+
+  <h3>Result after setup</h3>
+  <p>The following three values must be configured successfully:</p>
+  <ol>
+    <li>GitHub App ID</li>
+    <li>Installation ID</li>
+    <li>Private Key (PEM)</li>
+  </ol>
+  <p>Additionally:</p>
+  <ul>
+    <li>The connection test in the module is successful.</li>
+    <li>Repositories of the installation can be loaded and selected.</li>
+  </ul>
+
+  <hr>
+
+  <h3>Prerequisites</h3>
+  <ol>
+    <li>A GitHub account with permission to create and install a GitHub App.</li>
+    <li>Admin access to the shop.</li>
+    <li>Write permissions for the shop folder <code>download</code>.</li>
+    <li>Access to the repositories that will be synchronized.</li>
+  </ol>
+
+  <hr>
+
+  <h3>Step 1: Create the GitHub App</h3>
+  <ol>
+    <li>In GitHub, click your profile icon in the top right corner.</li>
+    <li>Open <code>Settings</code>.</li>
+    <li>Open <code>Developer settings</code> in the left menu.</li>
+    <li>Select <code>GitHub Apps</code>.</li>
+    <li>Click <code>New GitHub App</code>.</li>
+    <li>Enter a unique name, for example <code>shopname-release-sync</code>.</li>
+    <li>Enter the <code>Homepage URL</code> (for example, your shop URL).</li>
+    <li>Set a <code>Callback URL</code> only if user login via GitHub is required.</li>
+    <li>If webhooks are not needed: disable webhooks.</li>
+    <li>Set minimal permissions:
+      <ul>
+        <li>Repository permission <code>Metadata</code>: <code>Read-only</code></li>
+        <li>Repository permission <code>Contents</code>: <code>Read-only</code></li>
+      </ul>
+    </li>
+    <li>Define where the app can be installed.</li>
+    <li>Save the app.</li>
+  </ol>
+  <p class="muted">Note: Grant as few permissions as possible (least privilege).</p>
+
+  <hr>
+
+  <h3>Step 2: Install the GitHub App</h3>
+  <ol>
+    <li>Open <code>Install App</code> in your GitHub App settings.</li>
+    <li>Select the target account or organization.</li>
+    <li>Set repository access to <code>Selected repositories</code>.</li>
+    <li>Select only the repositories your shop should use.</li>
+    <li>Confirm the installation.</li>
+  </ol>
+  <p><strong>Important:</strong> This selection determines which repositories the shop can technically access.</p>
+
+  <hr>
+
+  <h3>Step 3: Retrieve the App ID</h3>
+  <ol>
+    <li>Open the GitHub App settings.</li>
+    <li>Copy the <code>App ID</code>.</li>
+    <li>Save this value.</li>
+  </ol>
+
+  <h3>Step 4: Retrieve the Installation ID</h3>
+  <ol>
+    <li>Open the app installation view.</li>
+    <li>Read the installation ID from the URL or from the installation details.</li>
+    <li>Save this value.</li>
+  </ol>
+  <p>Example: if the URL contains <code>.../settings/installations/12345678</code>, then <code>12345678</code> is the Installation ID.</p>
+
+  <h3>Step 5: Generate the private key (PEM)</h3>
+  <ol>
+    <li>In the GitHub App configuration, open <code>Private keys</code>.</li>
+    <li>Click <code>Generate a private key</code>.</li>
+    <li>Store the downloaded PEM file securely.</li>
+    <li>Keep the PEM file ready for module configuration.</li>
+  </ol>
+  <p><strong>Important:</strong></p>
+  <ul>
+    <li>Never send private keys by email.</li>
+    <li>Never post private keys in tickets or chats.</li>
+    <li>If you suspect a leak, generate a new key immediately and revoke the old one.</li>
+  </ul>
+
+  <hr>
+
+  <h3>Step 6: Enter data in the shop module</h3>
+  <ol>
+    <li>Open the BX GitHub Repositories module in the shop admin.</li>
+    <li>Fill in: <code>GitHub App ID</code>, <code>Installation ID</code>, upload <code>Private Key (PEM)</code>.</li>
+    <li>Run <code>Test connection</code>.</li>
+    <li>On success, click <code>Save settings</code>.</li>
+  </ol>
+
+  <h3>Step 7: Load repository list and set selection</h3>
+  <ol>
+    <li>After a successful connection test, load the repository list.</li>
+    <li>Select the required repositories and save the selection.</li>
+    <li>Download repositories.</li>
+  </ol>
+  <p>Import target: ZIP files are stored in the shop folder <code>download</code>.</p>
+  <p><strong>Important:</strong> Each repository must have at least one version tag (for example <code>v2.0.5</code>).</p>
+  <pre><code>git tag -a v2.0.5 -m "BX Products Video v2.0.5"
+git push origin v2.0.5</code></pre>
+
+  <hr>
+
+  <h3>Typical errors and solutions</h3>
+  <p><strong>Error 401 / 403 during connection test</strong></p>
+  <p>Possible cause: values do not match, app not installed, or permissions too restrictive.</p>
+  <p>Solution: verify values, installation, and permissions.</p>
+
+  <p><strong>Repository list is empty</strong></p>
+  <p>Possible cause: no repositories enabled in the installation, or wrong account/organization selected.</p>
+  <p>Solution: check <code>Selected repositories</code> and grant required repositories.</p>
+
+  <p><strong>ZIP import does not work</strong></p>
+  <p>Possible cause: release asset pattern mismatch or missing write permissions in <code>download</code>.</p>
+  <p>Solution: verify asset naming, folder permissions, and retry.</p>
+
+  <hr>
+
+  <h3>Security checklist before go-live</h3>
+  <ol>
+    <li>Only minimal permissions are enabled.</li>
+    <li>Installation is set to <code>Selected repositories</code>.</li>
+    <li>No sensitive data is stored in logs in plain text.</li>
+    <li>Private key is stored securely.</li>
+    <li>Test run is successful.</li>
+    <li>Download file is correctly written to <code>download</code>.</li>
+    <li>Scheduled task execution is enabled.</li>
+  </ol>
+
+  <h3>Maintenance and rotation</h3>
+  <ol>
+    <li>Rotate private keys regularly.</li>
+    <li>Remove repositories no longer needed from the installation.</li>
+    <li>Run the connection test again after permission changes.</li>
+    <li>Review error logs regularly.</li>
+  </ol>
+</body>
+</html>

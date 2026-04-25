@@ -63,6 +63,11 @@ class bx_github_repositories {
       xtc_db_query("ALTER TABLE " . TABLE_ADMIN_ACCESS . " ADD bx_github_repositories INT(1) NOT NULL DEFAULT 0");
     }
     xtc_db_query("UPDATE " . TABLE_ADMIN_ACCESS . " SET bx_github_repositories = 1");
+    
+    if (!$this->columnExists(TABLE_ADMIN_ACCESS, 'bx_github_download_repo')) {
+      xtc_db_query("ALTER TABLE " . TABLE_ADMIN_ACCESS . " ADD bx_github_download_repo INT(1) NOT NULL DEFAULT 0");
+    }
+    xtc_db_query("UPDATE " . TABLE_ADMIN_ACCESS . " SET bx_github_download_repo = 1");
 
     xtc_db_query("
     INSERT INTO " . TABLE_CONFIGURATION . " (configuration_key, 
@@ -276,7 +281,7 @@ class bx_github_repositories {
       if (!$this->taskExists('github_repositories_check')) {
         xtc_db_query("INSERT INTO " . TABLE_SCHEDULED_TASKS . "
           (time_regularity, time_unit, status, tasks)
-          VALUES ('1', 'd', 0, 'github_repositories_check')");
+          VALUES ('1', 'h', 0, 'github_repositories_check')");
       }
 
       if (!$this->taskExists('github_repositories_notify')) {
@@ -292,6 +297,10 @@ class bx_github_repositories {
 
     if ($this->columnExists(TABLE_ADMIN_ACCESS, 'bx_github_repositories')) {
       xtc_db_query("ALTER TABLE " . TABLE_ADMIN_ACCESS . " DROP bx_github_repositories");
+    }
+    
+    if ($this->columnExists(TABLE_ADMIN_ACCESS, 'bx_github_download_repo')) {
+      xtc_db_query("ALTER TABLE " . TABLE_ADMIN_ACCESS . " DROP bx_github_download_repo");
     }
 
     xtc_db_query("DROP TABLE IF EXISTS bx_github_notifications");

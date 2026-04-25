@@ -25,13 +25,14 @@ Tag-Beschreibung (Vorschlag):
 - Shopbetreiber-Dokumentation fuer GitHub-App-Einrichtung und Betrieb liegt vor
 
 ## Ziel
-Käufer erhalten immer die neueste Version eines zugewiesenen Download-Produkts, für 2 Jahre ab Kaufdatum. Bei neuer Version werden berechtigte Käufer per E-Mail informiert.
+Käufer erhalten immer die neueste Version einer stabilen Download-Datei, fuer 2 Jahre ab Kaufdatum. Bei neuer Version werden berechtigte Käufer per E-Mail informiert.
 
 ## Fachregeln
 - Immer neueste Version ausliefern.
 - Berechtigung endet exakt 2 Jahre nach Kaufdatum.
 - Nur berechtigte Käufer erhalten Update-Informationen.
 - Download-Datei im Shop bleibt unter einem stabilen lokalen Dateinamen erreichbar.
+- Berechtigungspruefung orientiert sich an den gekauften Download-Positionen (orders_products_download) und dem Kaufdatum der Bestellung.
 
 ## Architekturüberblick
 - Quelle: GitHub Releases API via Latest-Release-Endpunkt.
@@ -40,6 +41,7 @@ Käufer erhalten immer die neueste Version eines zugewiesenen Download-Produkts,
 - Credential-Management: App ID, Installation ID und Private Key je Shop in der Datenbank; Private Key nur verschlüsselt.
 - Auslieferung: Stabiler Dateiname im Download-Verzeichnis, atomar ersetzt.
 - Benachrichtigung: Queue-basierter Mailversand in Batches.
+- Kein hartes Primaer-Mapping Repository -> Produkt/Attribut fuer die Auslieferung; massgeblich ist die in Bestellungen persistierte Download-Datei.
 
 ## Datenmodell
 
@@ -51,8 +53,8 @@ Felder:
 - status (0/1)
 - owner_name
 - repo_name
-- product_id
-- products_attributes_id
+- product_id (optional, nur fuer Reporting/Backoffice)
+- products_attributes_id (optional, nur fuer Reporting/Backoffice)
 - release_asset_pattern
 - github_token_encrypted
 - local_filename_stable
@@ -118,7 +120,7 @@ Ablauf:
    - Optional Hash prüfen.
    - Atomar auf stabilen Dateinamen umbenennen.
 6. Status und Release-Log aktualisieren.
-7. Notification-Queue für berechtigte Käufer füllen.
+7. Notification-Queue für berechtigte Käufer anhand gekaufter Download-Dateien (orders_products_download) füllen.
 
 ### Task 2: github_repositories_notify
 Intervall: Regelmäßig, in Batches.
@@ -130,11 +132,9 @@ Ablauf:
 4. Fehler retry-fähig protokollieren.
 
 ## Download- und Berechtigungslogik
-1. Produktattribut verweist auf stabilen lokalen Dateinamen.
-2. Beim Download wird zusätzlich geprüft:
-   - Mapping Bestellung zu Repository vorhanden.
-   - Kaufdatum + 2 Jahre noch nicht erreicht.
-3. Nur dann wird Download ausgeliefert.
+1. Beim Kauf wird in modified die konkrete Download-Datei je Bestellposition in orders_products_download gespeichert.
+2. Das Modul haelt diese Datei unter einem stabilen lokalen Dateinamen aktuell (atomarer Austausch).
+3. Beim Download wird zusaetzlich geprueft, ob Kaufdatum + 2 Jahre noch nicht erreicht ist.
 4. Nach Fristablauf wird Download gesperrt.
 
 Hinweis:
@@ -144,7 +144,7 @@ Hinweis:
 
 ### Bereich 1: Übersicht
 - Repository
-- Produkt/Attribut
+- Stabiler Dateiname
 - Aktueller Tag
 - Letzter Check
 - Letzter Erfolg
@@ -158,9 +158,8 @@ Hinweis:
 - PEM serverseitig validieren, verschlüsseln und nur verschlüsselt speichern
 - Private Key nach dem Speichern nie im Klartext erneut anzeigen
 - owner_name, repo_name
-- Produkt und Download-Attribut
+- Stabiler Dateiname (Auslieferungsanker)
 - Asset-Pattern
-- Stabiler Dateiname
 - Intervall
 - Token
 - Schalter für Auto-Update/Auto-Notify
@@ -209,14 +208,18 @@ Hinweis:
 - KnpLabs GitHub-Client anbinden und Auth-Hierarchie (App zuerst, PAT-Fallback) umsetzen.
 - Robuste Asset-Auswahl, Rate-Limit-Handling und End-to-End-Smoke-Test bereitstellen.
 
-### Phase 3 - Dateisynchronisation
+### Phase 3A - Dateisynchronisation (fachlich erreicht)
+- Fachziel erreicht: ZIP-Datei wird pro Repository unter stabilem lokalem Dateinamen aktualisiert und atomar ersetzt.
+- Aktuelle Umsetzung liegt derzeit im Admin-Controller (manueller Sync), noch nicht in separaten Worker-/Service-Schichten.
+
+### Phase 3B - Dateisynchronisation (technische Konsolidierung)
 - Stream-Download in temporäre Datei.
 - ZIP im Shop-Ordner download speichern (stabiler lokaler Dateiname).
 - Atomarer Austausch der stabilen Zieldatei im Zielordner.
 - Logging und Rollback bei Fehlern.
 
 ### Phase 4 - Berechtigungsprüfung 2 Jahre
-- Zusatzprüfung im Downloadfluss integrieren.
+- Zusatzpruefung im Downloadfluss fuer orders_products_download integrieren.
 - Klare Fehlermeldung bei abgelaufener Berechtigung.
 
 ### Phase 5 - Kundenbenachrichtigung
@@ -226,7 +229,7 @@ Hinweis:
 
 ### Phase 6 - Admin-UI
 - Listenansicht, Detailmaske, Historie.
-- Setup-Flow: Repositories der Installation einlesen und gezielt auswählen.
+- Setup-Flow: Repositories der Installation einlesen und gezielt aktivieren/deaktivieren.
 - Setup-Flow: App ID, Installation ID und PEM-Datei im Admin erfassen.
 - PEM-Upload verarbeiten (Validierung -> Verschlüsselung -> DB-Speicherung).
 - DB-first-Konfigurationslesung für Auth aktivieren (Dateikonstanten nur temporärer Fallback).
@@ -254,7 +257,10 @@ Hinweis:
 - [x] Auth-Flow und Token-Lifecycle (JWT -> Installation Token, Cache, PAT-Fallback) implementieren: src/admin/includes/classes/bx_github_repositories_app_manager.php, src/admin/includes/classes/bx_github_repositories_client_factory.php
 - [x] Live-Smoke-Test für Authentifizierung ergänzen: src/tests/bx_github_repositories_auth_smoke_test.php
 
-### Phase 3 - Dateisynchronisation
+### Phase 3A - Dateisynchronisation (fachlich erreicht)
+- [x] ZIP-Import unter stabilem Dateinamen inkl. temporaerer Datei und atomarem Austausch implementiert (derzeit im Admin-Controller): src/admin/bx_github_repositories.php
+
+### Phase 3B - Dateisynchronisation (technische Konsolidierung)
 - [ ] Download-Service anlegen (Temp-Datei, atomares Rename in den Shop-Ordner download): src/admin/includes/classes/bx_github_repositories_downloader.php
 - [ ] Dateisystem-Helfer anlegen (Locking/Pfadprüfung): src/admin/includes/classes/bx_github_repositories_fs.php
 - [ ] Import-Logik in Worker integrieren (ZIP-Asset aus Release in download speichern): src/api/scheduled_tasks/modules/github_repositories_check.php
@@ -271,7 +277,7 @@ Hinweis:
 
 ### Phase 6 - Admin-UI
 - [ ] Listenansicht/Filter in Adminseite implementieren: src/admin/bx_github_repositories.php
-- [ ] Setup-/Bearbeitungsformular für Repository-Mapping hinzufügen (inkl. Repository-Erfassung der Installation): src/admin/bx_github_repositories.php
+- [x] Setup-Flow fuer Repository-Erfassung und Aktivierung/Deaktivierung vorhanden: src/admin/bx_github_repositories.php
 - [x] Upload-Feld für PEM-Datei ergänzen und Multipart-Handling implementieren: src/admin/bx_github_repositories.php
 - [x] Serverseitige PEM-Validierung und Verschlüsselung beim Speichern ergänzen: src/admin/bx_github_repositories.php, src/admin/includes/classes/bx_github_repositories_crypto.php
 - [x] DB-Konfigurationskeys für App ID, Installation ID und verschlüsselten Private Key ergänzen: src/admin/includes/modules/system/bx_github_repositories.php
@@ -280,7 +286,7 @@ Hinweis:
 - [ ] Historie und Queue-Status integrieren: src/admin/bx_github_repositories.php
 
 ### Phase 7 - Hardening und Betrieb
-- [ ] Scheduled-Task-Registrierung in Install/Remove ergänzen: src/admin/includes/modules/system/bx_github_repositories.php
+- [x] Scheduled-Task-Registrierung in Install/Remove ergänzt: src/admin/includes/modules/system/bx_github_repositories.php
 - [ ] Einheitliches Logging ergänzen: src/includes/classes/bx_github_repositories_logger.php
 - [ ] Betriebsdokumentation ergänzen: docs/ROADMAP.md, docs/OPERATIONS.md
 
@@ -288,6 +294,7 @@ Hinweis:
 - Exakte Asset-Auswahlregel bei mehreren ZIP-Dateien.
 - E-Mail-Inhalt und rechtliche Einordnung für Bestandskunden-Mails.
 - Verhalten bei GitHub-Repositories ohne Releases.
+- Ob optionale Felder product_id/products_attributes_id langfristig entfernt werden sollen.
 
 ## Abnahme-Checkliste
 - Neues Release wird erkannt und importiert.

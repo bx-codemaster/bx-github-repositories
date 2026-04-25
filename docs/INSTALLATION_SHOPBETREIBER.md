@@ -36,17 +36,17 @@ Zusatz:
 ## Schritt 1: GitHub App anlegen
 1. In GitHub oben rechts auf das Profil klicken.
 2. `Settings` öffnen.
-3. `Developer settings` öffnen.
+3. `Developer settings`, nach unten scrollen und links im Menu öffnen.
 4. `GitHub Apps` auswählen.
 5. `New GitHub App` klicken.
 6. Einen eindeutigen Namen vergeben, z. B. `shopname-release-sync`.
 7. `Homepage URL` eintragen (z. B. Shop-URL).
-8. `Callback URL` nur setzen, wenn Benutzer-Login über GitHub benötigt wird.
-9. Wenn keine Webhooks benötigt werden: Webhooks deaktivieren.
+8. `Callback URL` nur setzen, wenn Benutzer-Login über GitHub benötigt wird. Für uns nicht relevant.
+9. Wenn keine Webhooks benötigt werden: Webhooks deaktivieren. Für reine Versions-Synchronisation sind Webhooks nicht erforderlich.
 10. Berechtigungen minimal setzen:
    - Repository permission `Metadata`: `Read-only`
    - Repository permission `Contents`: `Read-only`
-11. Unter Installation festlegen, wo die App installierbar ist.
+11. Unter Installation festlegen, wo die App installierbar ist. 
 12. App speichern.
 
 Hinweis:
@@ -86,7 +86,7 @@ Bei einer URL mit `.../settings/installations/12345678` ist `12345678` die Insta
 1. In der GitHub-App-Konfiguration den Bereich `Private keys` öffnen.
 2. `Generate a private key` klicken.
 3. Die heruntergeladene PEM-Datei sicher speichern.
-4. Inhalt der PEM-Datei für die Modulkonfiguration bereithalten.
+4. Die PEM-Datei für die Modulkonfiguration bereithalten.
 
 Wichtig:
 - Private Keys nicht per E-Mail versenden.
@@ -100,43 +100,29 @@ Wichtig:
 2. Folgende Felder befüllen:
    - `GitHub App ID`
    - `Installation ID`
-   - `Private Key (PEM)`
+   - `Private Key (PEM)` Datei hochladen
 3. `Verbindung testen` ausführen.
 4. Bei Erfolg `Einstellungen speichern`.
-
-Empfehlung:
-Private Key nach dem Speichern nur verschlüsselt ablegen und nicht erneut im Klartext anzeigen.
 
 ---
 
 ## Schritt 7: Repository-Liste laden und Auswahl festlegen
 1. Nach erfolgreichem Verbindungstest die Repository-Liste laden.
-2. Die gewünschten Repositories aktivieren.
-3. Pro Repository Produkt-/Attribut-Zuordnung festlegen.
-4. Release-Asset-Regel (ZIP) definieren.
+2. Die gewünschten Repositories auswählen und Auswahl speichern.
+3. Repositories herunterladen
 
 Importziel:
-Das gewählte ZIP-Asset wird im Shop-Ordner `download` gespeichert.
+Das ZIP-Dateien werden im Shop-Ordner `download` gespeichert.
 
----
+Wichtig:
+Jedes verwendete Repository muss mindestens einen Tag mit Versionsnummer haben (z. B. `v2.0.5`).
+Nur dann kann das Modul eine ZIP-Datei laden. Ohne Version-Tag ist kein ZIP-Download möglich.
 
-## Schritt 8: Funktionstest
-1. Für ein Repository einen manuellen Testlauf ausführen.
-2. Prüfen, ob die ZIP-Datei in `download` vorhanden ist.
-3. Prüfen, ob Dateiname und Zuordnung korrekt sind.
-4. Danach den automatischen Task aktivieren.
-
----
-
-## Betrieb in mehreren Shops (Mandantentrennung)
-Damit Shop A nicht auf Repositories von Shop B zugreift:
-1. Pro Shop eine eigene GitHub-App-Installation verwenden.
-2. Pro Installation nur `Selected repositories` freigeben.
-3. Keine gemeinsamen PATs oder gemeinsamen Private Keys über mehrere Kunden nutzen.
-4. Zugangsdaten pro Shop getrennt speichern.
-
-Kurzregel:
-Jeder Shop hat seine eigene Installation und eigene Repository-Freigabe.
+Beispiel:
+```bash
+git tag -a v2.0.5 -m "BX Products Video v2.0.5"
+git push origin v2.0.5
+```
 
 ---
 

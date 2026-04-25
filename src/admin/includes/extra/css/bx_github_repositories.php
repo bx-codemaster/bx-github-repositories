@@ -46,6 +46,205 @@
     color:#777;
   }
 
+  .bx-gh-page-heading-image {
+    min-width: 45px;
+  }
+
+  .bx-gh-heading-icon {
+    max-height: 32px;
+  }
+
+  .bx-gh-section-heading {
+    margin: 14px 0 8px;
+  }
+
+  .bx-gh-section-text {
+    margin-bottom: 14px;
+  }
+
+  .bx-gh-form-label-col {
+    width: 220px;
+  }
+
+  .bx-gh-input-regular {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .bx-gh-vertical-top {
+    vertical-align: top;
+  }
+
+  .bx-gh-help-text {
+    margin-top: 6px;
+    color: #666;
+  }
+
+  .bx-gh-status-text {
+    margin-top: 8px;
+    color: #555;
+  }
+
+  .bx-gh-actions-row {
+    margin: 12px 0 16px;
+  }
+
+  .bx-gh-save-settings-btn {
+    margin-left: 8px;
+  }
+
+  .bx-gh-repo-heading,
+  .bx-gh-manual-heading {
+    margin-top: 16px;
+  }
+
+  .bx-gh-repo-intro {
+    margin-bottom: 8px;
+  }
+
+  .bx-gh-col-local-filename {
+    width: 35%;
+  }
+
+  .bx-gh-col-zip-status {
+    width: 70px;
+    text-align: center;
+  }
+
+  .bx-gh-zip-status-cell {
+    text-align: center;
+  }
+
+  .bx-gh-zip-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    vertical-align: middle;
+  }
+
+  .bx-gh-zip-dot-present {
+    background: #2e7d32;
+  }
+
+  .bx-gh-zip-dot-missing {
+    background: #c62828;
+  }
+
+  .bx-gh-col-version {
+    width: 150px;
+    text-align: center;
+  }
+
+  .bx-gh-col-last-check {
+    width: 150px;
+  }
+
+  .bx-gh-empty-row {
+    color: #777;
+  }
+
+  .bx-gh-row-error {
+    background: #fff3f3;
+  }
+
+  .bx-gh-row-update {
+    background: #fffbe6;
+  }
+
+  .bx-gh-repo-error-msg {
+    color: #c00;
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
+  .bx-gh-text-muted {
+    color: #666;
+  }
+
+  .bx-gh-local-file-link {
+    color: #1a5a96;
+    text-decoration: underline;
+    word-break: break-all;
+  }
+
+  .bx-gh-local-file-link:hover,
+  .bx-gh-local-file-link:focus {
+    color: #0f3f6d;
+  }
+
+  .bx-gh-local-file-missing {
+    color: #777;
+    word-break: break-all;
+  }
+
+  .bx-gh-local-file-link {
+    color: #1a5a96;
+    text-decoration: underline;
+    word-break: break-all;
+  }
+
+  .bx-gh-local-file-link:hover,
+  .bx-gh-local-file-link:focus {
+    color: #0f3f6d;
+  }
+
+  .bx-gh-local-file-missing {
+    color: #777;
+    word-break: break-all;
+  }
+
+  .bx-gh-version-cell {
+    color: #444;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .bx-gh-inline-download {
+    margin-top: 4px;
+  }
+
+  .bx-gh-download-repo-btn {
+    background: #c62828;
+    border-color: #8e1d1d;
+    color: #fff;
+    font-size: 11px;
+    line-height: 1.2;
+    padding: 2px 8px;
+    min-height: auto;
+  }
+
+  .bx-gh-lastcheck-cell {
+    color: #888;
+    font-size: 12px;
+  }
+
+  .bx-gh-selection-actions {
+    margin-top: 10px;
+  }
+
+  .bx-gh-import-target {
+    margin-top: 12px;
+    color: #555;
+  }
+
+  .bx-gh-manual-text {
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  .bx-gh-text-soft-dark {
+    color: #555;
+  }
+
+  .bx-gh-manual-code {
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+    padding: 8px;
+    margin: 0 0 10px;
+    overflow: auto;
+  }
+
   .fixed_messageStack {
     /* 1. Aus dem Dokumentenfluss nehmen */
     position: fixed; 
@@ -129,6 +328,55 @@
     border: solid #BADBCC 1px;
     background-color: #D1E7DD;
     color: #0F5132;
+  }
+
+  #bx-github-loading-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(20, 26, 36, 0.55);
+    z-index: 9999;
+  }
+
+  .bx-github-loading-box {
+    min-width: 320px;
+    max-width: 90vw;
+    padding: 20px 24px;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+    text-align: center;
+    color: #1f2a38;
+  }
+
+  .bx-github-loading-spinner {
+    width: 34px;
+    height: 34px;
+    margin: 0 auto 10px;
+    border-radius: 50%;
+    border: 4px solid #d7dde6;
+    border-top-color: #2b6cb0;
+    animation: bx-github-spin 0.9s linear infinite;
+  }
+
+  .bx-github-loading-title {
+    margin: 0 0 6px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .bx-github-loading-note {
+    margin: 0;
+    font-size: 12px;
+    color: #4a5568;
+  }
+
+  @keyframes bx-github-spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
   </style>
   <?php } ?>

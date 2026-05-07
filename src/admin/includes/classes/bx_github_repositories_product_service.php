@@ -34,6 +34,9 @@ class bx_github_repositories_product_service
     int $current_attributes_id,
     int $template_products_id,
     string $stable_filename,
+    string $owner_name,
+    string $repo_name,
+    string $installation_token,
     string $tag_name,
     ?array $moduleinfo
   ): array {
@@ -64,8 +67,14 @@ class bx_github_repositories_product_service
       }
     }
 
+    $created_new_product = false;
     if ($products_id === 0) {
       $products_id = $this->copyTemplateProduct($template_products_id);
+      $created_new_product = true;
+    }
+
+    if ($created_new_product) {
+      $this->assignProductImageFromGithub($products_id, $owner_name, $repo_name, $installation_token);
     }
 
     $this->updateProductModel($products_id, $this->buildProductsModel($repo_id, $tag_name));
@@ -144,6 +153,10 @@ class bx_github_repositories_product_service
     if (isset($row['products_model'])) {
       // products_model kann in manchen Shops eindeutig indiziert sein.
       $row['products_model'] = '';
+    }
+    if (array_key_exists('products_image', $row)) {
+      // Das neue Produkt darf nie auf den Dateinamen des Template-Bildes zeigen.
+      $row['products_image'] = '';
     }
     if (array_key_exists('ebay_sku', $row)) {
       // Wenn ein Fremdmodul ebay_sku eindeutig indiziert, darf hier kein leerer String dupliziert werden.
@@ -356,6 +369,141 @@ class bx_github_repositories_product_service
     }
 
     return (float)$tax_row['tax_rate'];
+  }
+
+  /**
+   * Setzt beim neu erzeugten Produkt ein Bild aus dem Repository.
+   * Reihenfolge: products_image.png, danach icon.png.
+   */
+  private function assignProductImageFromGithub(int $products_id, string $owner_name, string $repo_name, string $installation_token): void
+  {
+    $image_payload = $this->fetchGithubProductImage($owner_name, $repo_name, $installation_token);
+    if ($image_payload === null) {
+      return;
+    }
+
+    $image_name = (int)$products_id . '_0.' . $image_payload['extension'];
+    $image_data = $image_payload['content'];
+
+    $paths = [
+      defined('DIR_FS_CATALOG_ORIGINAL_IMAGES') ? (string)constant('DIR_FS_CATALOG_ORIGINAL_IMAGES') : '',
+      defined('DIR_FS_CATALOG_POPUP_IMAGES') ? (string)constant('DIR_FS_CATALOG_POPUP_IMAGES') : '',
+      defined('DIR_FS_CATALOG_INFO_IMAGES') ? (string)constant('DIR_FS_CATALOG_INFO_IMAGES') : '',
+      defined('DIR_FS_CATALOG_MIDI_IMAGES') ? (string)constant('DIR_FS_CATALOG_MIDI_IMAGES') : '',
+      defined('DIR_FS_CATALOG_THUMBNAIL_IMAGES') ? (string)constant('DIR_FS_CATALOG_THUMBNAIL_IMAGES') : '',
+      defined('DIR_FS_CATALOG_MINI_IMAGES') ? (string)constant('DIR_FS_CATALOG_MINI_IMAGES') : '',
+    ];
+
+    $written = false;
+    foreach ($paths as $path) {
+      if ($path === '' || !is_dir($path) || !is_writable($path)) {
+        continue;
+      }
+      $target_file = rtrim($path, '/\\') . DIRECTORY_SEPARATOR . $image_name;
+      if (@file_put_contents($target_file, $image_data) !== false) {
+        $written = true;
+      }
+    }
+
+    if (!$written) {
+      return;
+    }
+
+    xtc_db_query(
+      "UPDATE " . TABLE_PRODUCTS .
+      " SET products_image = '" . xtc_db_input($image_name) . "'," .
+      "     products_last_modified = now()" .
+      " WHERE products_id = " . (int)$products_id
+    );
+  }
+
+  /**
+   * Lädt das bevorzugte Produktbild aus GitHub (products_image.png, sonst icon.png).
+   */
+  private function fetchGithubProductImage(string $owner_name, string $repo_name, string $installation_token): ?array
+  {
+    $owner = trim($owner_name);
+    $repo  = trim($repo_name);
+    $token = trim($installation_token);
+    if ($owner === '' || $repo === '' || $token === '') {
+      return null;
+    }
+
+    $candidates = ['products_image.png', 'icon.png'];
+    foreach ($candidates as $filename) {
+      $response = $this->downloadGithubRepositoryFile($owner, $repo, $filename, $token);
+      if ($response === null || $response['content'] === '') {
+        continue;
+      }
+
+      if (function_exists('getimagesizefromstring')) {
+        $image_info = @getimagesizefromstring($response['content']);
+        if ($image_info === false) {
+          continue;
+        }
+      }
+
+      return [
+        'content' => $response['content'],
+        'extension' => $response['extension'],
+      ];
+    }
+
+    return null;
+  }
+
+  /**
+   * Lädt eine Datei aus einem GitHub-Repository über die Contents-API.
+   */
+  private function downloadGithubRepositoryFile(string $owner, string $repo, string $filename, string $installation_token): ?array
+  {
+    $endpoint = 'https://api.github.com/repos/'
+      . rawurlencode($owner) . '/'
+      . rawurlencode($repo)
+      . '/contents/' . rawurlencode($filename);
+
+    $ch = curl_init($endpoint);
+    curl_setopt_array($ch, [
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_TIMEOUT        => 30,
+      CURLOPT_HTTPGET        => true,
+      CURLOPT_HTTPHEADER     => [
+        'Authorization: Bearer ' . $installation_token,
+        'Accept: application/vnd.github+json',
+        'X-GitHub-Api-Version: 2022-11-28',
+        'User-Agent: bx-github-repositories-admin',
+      ],
+      CURLOPT_SSL_VERIFYPEER => true,
+      CURLOPT_SSL_VERIFYHOST => 2,
+    ]);
+
+    $response_raw = curl_exec($ch);
+    $http_code    = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curl_error   = curl_error($ch);
+
+    if ($curl_error !== '' || $http_code === 404 || $http_code !== 200 || !is_string($response_raw)) {
+      return null;
+    }
+
+    $response = json_decode($response_raw, true);
+    if (!is_array($response) || !isset($response['content']) || ($response['encoding'] ?? '') !== 'base64') {
+      return null;
+    }
+
+    $decoded = base64_decode(str_replace(["\n", "\r"], '', (string)$response['content']), true);
+    if ($decoded === false || $decoded === '') {
+      return null;
+    }
+
+    $extension = strtolower((string)pathinfo($filename, PATHINFO_EXTENSION));
+    if ($extension === '') {
+      $extension = 'png';
+    }
+
+    return [
+      'content' => $decoded,
+      'extension' => $extension,
+    ];
   }
 
   /**

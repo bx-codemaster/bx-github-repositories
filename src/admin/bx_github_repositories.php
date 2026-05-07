@@ -503,6 +503,9 @@ if ((string)($_REQUEST['debug_moduleinfo'] ?? '') === '1') {
       $current_attributes_id,
       $template_product_id,
       $local_file,
+      $owner,
+      $repo_name,
+      $sync_token,
       $tag_name,
       $moduleinfo
     );

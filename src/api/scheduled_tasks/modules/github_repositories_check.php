@@ -3,64 +3,6 @@
    BX GitHub Repositories - Scheduled Task: Check
    ---------------------------------------------------------------------------------------*/
 
-if (!function_exists('bx_github_repositories_interval_to_seconds')) {
-  function bx_github_repositories_interval_to_seconds($value, $unit) {
-    $value = max(1, (int)$value);
-    $unit = strtolower((string)$unit);
-
-    if ($unit === 'hourly' || $unit === 'h') {
-      return $value * 3600;
-    }
-
-    if ($unit === 'weekly' || $unit === 'w') {
-      return $value * 604800;
-    }
-
-    if ($unit === 'monthly') {
-      // Fallback in Sekunden; die kalenderbasierte Prüfung erfolgt in is_repo_due().
-      return $value * 2592000;
-    }
-
-    return $value * 86400;
-  }
-}
-
-if (!function_exists('bx_github_repositories_is_repo_due')) {
-  function bx_github_repositories_is_repo_due(array $repo) {
-    $last_check_raw = isset($repo['last_check_at']) ? (string)$repo['last_check_at'] : '';
-    if ($last_check_raw === '' || $last_check_raw === '0000-00-00 00:00:00') {
-      return true;
-    }
-
-    $last_check_ts = strtotime($last_check_raw);
-    if ($last_check_ts === false) {
-      return true;
-    }
-
-    $value = max(1, (int)($repo['check_interval_value'] ?? 1));
-    $unit = strtolower((string)($repo['check_interval_unit'] ?? 'daily'));
-
-    $base_date = new DateTimeImmutable('@' . (int)$last_check_ts);
-
-    if ($unit === 'hourly' || $unit === 'h') {
-      $next_due = $base_date->modify('+' . $value . ' hour');
-    } elseif ($unit === 'weekly' || $unit === 'w') {
-      $next_due = $base_date->modify('+' . $value . ' week');
-    } elseif ($unit === 'monthly') {
-      $next_due = $base_date->modify('+' . $value . ' month');
-    } else {
-      // daily und Legacy-Fallback
-      $next_due = $base_date->modify('+' . $value . ' day');
-    }
-
-    if ($next_due === false) {
-      return true;
-    }
-
-    return $next_due->getTimestamp() <= time();
-  }
-}
-
 function cron_github_repositories_check() {
   if (!defined('MODULE_BX_GITHUB_REPOSITORIES_STATUS')
     || (string)constant('MODULE_BX_GITHUB_REPOSITORIES_STATUS') !== 'True'
@@ -87,9 +29,9 @@ function cron_github_repositories_check() {
   }
 
   try {
-    $crypto = new bx_github_repositories_crypto();
-    $private_key = $crypto->decryptToken($private_key_encrypted);
-    $token_data = bx_github_repositories_create_installation_token($app_id, $installation_id, $private_key);
+    $crypto             = new bx_github_repositories_crypto();
+    $private_key        = $crypto->decryptToken($private_key_encrypted);
+    $token_data         = bx_github_repositories_create_installation_token($app_id, $installation_id, $private_key);
     $installation_token = (string)$token_data['token'];
   } catch (Exception $e) {
     return true;
@@ -101,9 +43,6 @@ function cron_github_repositories_check() {
             repo.repo_name,
             repo.local_filename_stable,
             repo.current_tag_name,
-            repo.check_interval_value,
-            repo.check_interval_unit,
-            repo.last_check_at,
             (
               SELECT log.tag_name
                 FROM " . TABLE_BX_GITHUB_RELEASE_LOG . " log
@@ -122,10 +61,6 @@ function cron_github_repositories_check() {
   while ($repo = xtc_db_fetch_array($repo_query)) {
     $repo_id = (int)$repo['repositories_id'];
 
-    if (!bx_github_repositories_is_repo_due($repo)) {
-      continue;
-    }
-
     try {
       $tag_info = bx_github_repositories_fetch_latest_tag(
         (string)$repo['owner_name'],
@@ -133,10 +68,10 @@ function cron_github_repositories_check() {
         $installation_token
       );
 
-      $tag_name = (string)$tag_info['tag_name'];
-      $zipball_url = (string)$tag_info['zipball_url'];
-      $asset_name = (string)$repo['local_filename_stable'];
-      $target_path = $download_dir . $asset_name;
+      $tag_name       = (string)$tag_info['tag_name'];
+      $zipball_url    = (string)$tag_info['zipball_url'];
+      $asset_name     = (string)$repo['local_filename_stable'];
+      $target_path    = $download_dir . $asset_name;
       $downloaded_tag = isset($repo['downloaded_tag_name']) ? trim((string)$repo['downloaded_tag_name']) : '';
 
       xtc_db_query(

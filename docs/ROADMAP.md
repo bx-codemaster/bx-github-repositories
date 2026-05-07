@@ -12,6 +12,17 @@ Ergebnis:
 - Verbindungstest (JWT -> Installation Token) ist vorhanden.
 - Detaillierte Shopbetreiber-Dokumentation für die Erzeugung der benötigten GitHub-Credentials liegt vor.
 
+### Milestone M2 - Produktiv einsetzbares Modul
+Status: Erreicht
+
+Ergebnis:
+- Modul ist in der aktuellen Form produktiv einsetzbar.
+- Repositories koennen im Admin geladen, aktiviert und gezielt synchronisiert werden.
+- ZIP-Dateien werden unter stabilem lokalem Dateinamen im Shop bereitgestellt; fehlende oder veraltete ZIPs werden im Admin sichtbar gemacht.
+- Scheduled Tasks fuer den automatischen Abgleich sind registriert und auf die Intervalle hourly, daily, weekly und monthly ausgerichtet.
+- Admin-UX fuer Setup und Betrieb ist vorhanden, inklusive Spinner, ZIP-Statusanzeige und sicherem Admin-Downloadfluss.
+- Shopbetreiber-Handbuch steht als HTML im Manual-Tab sowie als PDF in DE und EN bereit.
+
 ## Release-Notiz M1 (Changelog/Tag)
 
 Kurztext:
@@ -23,6 +34,18 @@ Tag-Beschreibung (Vorschlag):
 - PEM wird serverseitig validiert und nur verschluesselt gespeichert
 - Verbindungstest (JWT -> Installation Token) integriert
 - Shopbetreiber-Dokumentation fuer GitHub-App-Einrichtung und Betrieb liegt vor
+
+## Release-Notiz M2 (Changelog/Tag)
+
+Kurztext:
+- Milestone M2 erreicht: Modul ist in der aktuellen Form produktiv einsetzbar.
+
+Tag-Beschreibung (Vorschlag):
+- M2: Produktiv einsetzbares Modul fuer GitHub-Release-Synchronisation im modified-Shop
+- Repository-Auswahl, manueller Sync und ZIP-Statusanzeige im Admin verfuegbar
+- Sicherer Admin-Download lokaler Repository-ZIPs umgesetzt
+- Scheduled Tasks fuer regelmaessige Pruefung und Synchronisation integriert
+- Shopbetreiber-Handbuch in DE/EN als PDF sowie im Admin-Manual-Tab verfuegbar
 
 ## Ziel
 Käufer erhalten immer die neueste Version einer stabilen Download-Datei, fuer 2 Jahre ab Kaufdatum. Bei neuer Version werden berechtigte Käufer per E-Mail informiert.
@@ -198,21 +221,25 @@ Hinweis:
 ## Implementierungs-Roadmap
 
 ### Phase 1 - Modulgrundlage
+Status: Erreicht
 - Systemmodulstruktur und Konfigurationskeys anlegen.
 - Datenbanktabellen erstellen.
 - Admin-Rechte und Menüeintrag registrieren.
 - Scheduled Tasks registrieren.
 
 ### Phase 2 - GitHub-Client
+Status: Erreicht
 - GitHub App Authentifizierung (JWT -> Installation Access Token) implementieren.
 - KnpLabs GitHub-Client anbinden und Auth-Hierarchie (App zuerst, PAT-Fallback) umsetzen.
 - Robuste Asset-Auswahl, Rate-Limit-Handling und End-to-End-Smoke-Test bereitstellen.
 
 ### Phase 3A - Dateisynchronisation (fachlich erreicht)
+Status: Erreicht
 - Fachziel erreicht: ZIP-Datei wird pro Repository unter stabilem lokalem Dateinamen aktualisiert und atomar ersetzt.
 - Aktuelle Umsetzung liegt derzeit im Admin-Controller (manueller Sync), noch nicht in separaten Worker-/Service-Schichten.
 
 ### Phase 3B - Dateisynchronisation (technische Konsolidierung)
+Status: Teilweise erreicht
 - Stream-Download in temporäre Datei.
 - ZIP im Shop-Ordner download speichern (stabiler lokaler Dateiname).
 - Atomarer Austausch der stabilen Zieldatei im Zielordner.
@@ -228,6 +255,7 @@ Hinweis:
 - DE/EN Mailtexte.
 
 ### Phase 6 - Admin-UI
+Status: Weitgehend erreicht
 - Listenansicht, Detailmaske, Historie.
 - Setup-Flow: Repositories der Installation einlesen und gezielt aktivieren/deaktivieren.
 - Setup-Flow: App ID, Installation ID und PEM-Datei im Admin erfassen.
@@ -236,6 +264,7 @@ Hinweis:
 - Manuelle Aktionen: Check jetzt, Download jetzt, Testmail.
 
 ### Phase 7 - Hardening
+Status: Teilweise erreicht
 - Locking gegen parallele Task-Ausführung.
 - Monitoring, Logrotation, Fehleralarme.
 - Lasttests mit großen Dateien.

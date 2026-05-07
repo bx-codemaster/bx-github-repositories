@@ -37,7 +37,7 @@
   #headboard .main {
     margin: 5px 10px;
   }
-
+  
   #github_private_key {
     width: 100%; 
     max-width: 680px; 
@@ -162,32 +162,46 @@
     color: #666;
   }
 
-  .bx-gh-local-file-link {
-    color: #1a5a96;
-    text-decoration: underline;
-    word-break: break-all;
+  a.bx-gh-local-file-link:link { 
+    font-family: Verdana, Arial, sans-serif; 
+    font-size: 12px; 
+    color: #1a5a96; 
+    font-weight: normal; 
+    text-decoration: none; 
+    outline: none; 
+  }
+  a.bx-gh-local-file-link:visited { 
+    font-family: Verdana, Arial, sans-serif; 
+    font-size: 12px; 
+    color: #006600; 
+    font-weight: normal; 
+    text-decoration: none; 
+    outline: none; 
+  }
+  a.bx-gh-local-file-link:active { 
+    font-family: Verdana, Arial, sans-serif; 
+    font-size: 12px; 
+    color: #000000; 
+    font-weight: normal; 
+    text-decoration: none; 
+    outline: none; 
+  }
+  a.bx-gh-local-file-link:hover,
+  a.bx-gh-local-file-link:focus { 
+    font-family: Verdana, Arial, sans-serif; 
+    font-size: 12px; 
+    color: #0f3f6d; 
+    font-weight: normal; 
+    text-decoration: underline; 
+    outline: none; 
   }
 
-  .bx-gh-local-file-link:hover,
-  .bx-gh-local-file-link:focus {
-    color: #0f3f6d;
-  }
 
-  .bx-gh-local-file-missing {
-    color: #777;
-    word-break: break-all;
-  }
 
-  .bx-gh-local-file-link {
-    color: #1a5a96;
-    text-decoration: underline;
-    word-break: break-all;
-  }
 
-  .bx-gh-local-file-link:hover,
-  .bx-gh-local-file-link:focus {
-    color: #0f3f6d;
-  }
+
+
+
 
   .bx-gh-local-file-missing {
     color: #777;
@@ -446,5 +460,25 @@
       transform: rotate(360deg);
     }
   }
+
+    .bx-gh-button-create {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+    color: white !important;
+  }
+  .bx-gh-button-create:hover {
+    background-color: #218838 !important;
+    border-color: #218838 !important;
+  }
+  
+  .bx-gh-button-delete {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: white !important;
+  }
+  .bx-gh-button-delete:hover {
+    background-color: #c82333 !important;
+    border-color: #c82333 !important;
+  }
   </style>
-  <?php } ?>
+<?php } ?>

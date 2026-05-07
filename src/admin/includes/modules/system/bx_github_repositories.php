@@ -171,6 +171,30 @@ class bx_github_repositories {
                                             '8', 
                                             'xtc_cfg_select_option(array(\'True\', \'False\'), ',  
                                             now())");
+        xtc_db_query("
+        INSERT INTO " . TABLE_CONFIGURATION . " (configuration_key,
+                   configuration_value,
+                   configuration_group_id,
+                   sort_order,
+                   date_added)
+                VALUES ('MODULE_BX_GITHUB_REPOSITORIES_DOWNLOAD_MAXDAYS',
+                  '14',
+                  '6',
+                  '14',
+                  now())");
+
+        xtc_db_query("
+        INSERT INTO " . TABLE_CONFIGURATION . " (configuration_key,
+                   configuration_value,
+                   configuration_group_id,
+                   sort_order,
+                   date_added)
+                VALUES ('MODULE_BX_GITHUB_REPOSITORIES_DOWNLOAD_MAXCOUNT',
+                  '5',
+                  '6',
+                  '15',
+                  now())");
+
 
     xtc_db_query("
     INSERT INTO " . TABLE_CONFIGURATION . " (configuration_key, 
@@ -214,6 +238,30 @@ class bx_github_repositories {
                                             '".self::class."->configurationFieldVersion',   
                                             now())");
 
+    xtc_db_query("
+    INSERT INTO " . TABLE_CONFIGURATION . " (configuration_key,
+                                             configuration_value,
+                                             configuration_group_id,
+                                             sort_order,
+                                             date_added)
+                                    VALUES ('MODULE_BX_GITHUB_REPOSITORIES_TEMPLATE_PRODUCT_ID',
+                                            '0',
+                                            '6',
+                                            '12',
+                                            now())");
+
+    xtc_db_query("
+    INSERT INTO " . TABLE_CONFIGURATION . " (configuration_key,
+                                             configuration_value,
+                                             configuration_group_id,
+                                             sort_order,
+                                             date_added)
+                                    VALUES ('MODULE_BX_GITHUB_REPOSITORIES_MODULEINFO_LANGUAGE_IDS',
+                                            '',
+                                            '6',
+                                            '13',
+                                            now())");
+
     xtc_db_query("CREATE TABLE IF NOT EXISTS bx_github_repositories (
       repositories_id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
       status TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
@@ -232,10 +280,12 @@ class bx_github_repositories {
       last_check_at DATETIME DEFAULT NULL,
       last_success_at DATETIME DEFAULT NULL,
       last_error_message TEXT,
-      check_interval_value INT(11) UNSIGNED NOT NULL DEFAULT 1,
-      check_interval_unit VARCHAR(16) NOT NULL DEFAULT 'daily',
       auto_update TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
       auto_notify TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
+      moduleinfo_hash CHAR(64) DEFAULT NULL,
+      moduleinfo_ref_tag VARCHAR(128) DEFAULT NULL,
+      moduleinfo_last_fetch_at DATETIME DEFAULT NULL,
+      product_sync_error TEXT,
       created_at DATETIME NOT NULL DEFAULT '1000-01-01 00:00:00',
       updated_at DATETIME NOT NULL DEFAULT '1000-01-01 00:00:00',
       PRIMARY KEY (repositories_id),
@@ -278,18 +328,51 @@ class bx_github_repositories {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     if (TABLE_SCHEDULED_TASKS !== '') {
+      $taskRegularity = defined('MODULE_BX_GITHUB_REPOSITORIES_CHECK_INTERVAL')
+        ? (int)constant('MODULE_BX_GITHUB_REPOSITORIES_CHECK_INTERVAL')
+        : 1;
+      $taskUnitConfig = defined('MODULE_BX_GITHUB_REPOSITORIES_CHECK_UNIT')
+        ? (string)constant('MODULE_BX_GITHUB_REPOSITORIES_CHECK_UNIT')
+        : 'daily';
+
+      if ($taskRegularity < 1) {
+        $taskRegularity = 1;
+      }
+
+      switch ($taskUnitConfig) {
+        case 'hourly':
+          $taskUnit = 'h';
+          break;
+        case 'weekly':
+          $taskUnit = 'w';
+          break;
+        case 'monthly':
+          // monthly ist in Scheduled Tasks nicht nativ vorhanden, deshalb 4 Wochen.
+          $taskUnit = 'w';
+          $taskRegularity = $taskRegularity * 4;
+          break;
+        case 'daily':
+        default:
+          $taskUnit = 'd';
+          break;
+      }
+
       if (!$this->taskExists('github_repositories_check')) {
         xtc_db_query("INSERT INTO " . TABLE_SCHEDULED_TASKS . "
           (time_regularity, time_unit, status, tasks)
-          VALUES ('1', 'h', 0, 'github_repositories_check')");
+          VALUES ('".(int)$taskRegularity."', '".xtc_db_input($taskUnit)."', 0, 'github_repositories_check')");
       }
 
       if (!$this->taskExists('github_repositories_notify')) {
         xtc_db_query("INSERT INTO " . TABLE_SCHEDULED_TASKS . "
           (time_regularity, time_unit, status, tasks)
-          VALUES ('1', 'h', 0, 'github_repositories_notify')");
+          VALUES ('".(int)$taskRegularity."', '".xtc_db_input($taskUnit)."', 0, 'github_repositories_notify')");
       }
     }
+  }
+
+  public function update(): void {
+    // Zukünftige Datenbankmigrationen hier vornehmen
   }
 
   public function remove(): void {
@@ -323,8 +406,12 @@ class bx_github_repositories {
       'MODULE_BX_GITHUB_REPOSITORIES_API_RETRY_COUNT',
       'MODULE_BX_GITHUB_REPOSITORIES_AUTH_DEBUG',
       'MODULE_BX_GITHUB_REPOSITORIES_APP_ID',
-      'MODULE_BX_GITHUB_REPOSITORIES_INSTALLATION_ID',  
-      'MODULE_BX_GITHUB_REPOSITORIES_PRIVATE_KEY_ENCRYPTED'
+      'MODULE_BX_GITHUB_REPOSITORIES_INSTALLATION_ID',
+      'MODULE_BX_GITHUB_REPOSITORIES_PRIVATE_KEY_ENCRYPTED',
+      'MODULE_BX_GITHUB_REPOSITORIES_TEMPLATE_PRODUCT_ID',
+      'MODULE_BX_GITHUB_REPOSITORIES_MODULEINFO_LANGUAGE_IDS',
+      'MODULE_BX_GITHUB_REPOSITORIES_DOWNLOAD_MAXDAYS',
+      'MODULE_BX_GITHUB_REPOSITORIES_DOWNLOAD_MAXCOUNT'
     );
   }
 

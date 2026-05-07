@@ -263,3 +263,94 @@ function bx_github_repositories_download_asset(string $asset_url, string $instal
     throw new Exception(sprintf(BX_GITHUB_REPOSITORIES_ERROR_FILE_RENAME, $target_path));
   }
 }
+
+/**
+ * Lade moduleinfo.json eines Repositories über die GitHub Contents API.
+ *
+ * Gibt das dekodierte Array zurück oder null wenn die Datei nicht gefunden wurde
+ * oder das JSON ungültig ist. Wirft eine Exception bei Netzwerk-/Auth-Fehlern.
+ *
+ * @param string $owner             GitHub-Owner
+ * @param string $repo              Repository-Name
+ * @param string $installation_token GitHub Installation Access Token
+ * @return array|null               Dekodiertes JSON-Array oder null
+ * @throws Exception                Bei Netzwerk- oder Authentifizierungsfehlern
+ */
+function bx_github_repositories_fetch_moduleinfo_json(
+  string $owner,
+  string $repo,
+  string $installation_token
+): ?array {
+  $endpoint = 'https://api.github.com/repos/'
+    . rawurlencode($owner) . '/'
+    . rawurlencode($repo)
+    . '/contents/moduleinfo.json';
+  $ch = curl_init($endpoint);
+  curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT        => 30,
+    CURLOPT_HTTPGET        => true,
+    CURLOPT_HTTPHEADER     => [
+      'Authorization: Bearer ' . $installation_token,
+      'Accept: application/vnd.github+json',
+      'X-GitHub-Api-Version: 2022-11-28',
+      'User-Agent: bx-github-repositories-admin',
+    ],
+    CURLOPT_SSL_VERIFYPEER => true,
+    CURLOPT_SSL_VERIFYHOST => 2,
+  ]);
+
+  $response_raw = curl_exec($ch);
+  $http_code    = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  $curl_error   = curl_error($ch);
+
+  if ($curl_error !== '') {
+    throw new Exception(sprintf(BX_GITHUB_REPOSITORIES_ERROR_DOWNLOAD_FAILED, $http_code, $curl_error));
+  }
+
+  if ($http_code === 404) {
+    return null;
+  }
+
+  if ($http_code !== 200) {
+    $response = is_string($response_raw) ? json_decode($response_raw, true) : null;
+    $details  = is_array($response) && isset($response['message']) ? (string)$response['message'] : '-';
+    throw new Exception(sprintf(BX_GITHUB_REPOSITORIES_ERROR_DOWNLOAD_FAILED, $http_code, $details));
+  }
+
+  $response = is_string($response_raw) ? json_decode($response_raw, true) : null;
+
+  if (!is_array($response) || !isset($response['content']) || $response['encoding'] !== 'base64') {
+    return null;
+  }
+
+  $decoded = base64_decode(str_replace(["\n", "\r"], '', (string)$response['content']), true);
+  if ($decoded === false) {
+    return null;
+  }
+
+  $data = json_decode($decoded, true);
+  return is_array($data) ? $data : null;
+}
+
+/**
+ * Normalisiert den Preiswert aus moduleinfo.json auf float oder null.
+ *
+ * Regeln:
+ * - "free" (case-insensitive) → 0.0
+ * - numerischer Wert          → float (>= 0)
+ * - alles andere              → null (Template-Preis behalten)
+ *
+ * @param mixed $raw Rohwert aus moduleinfo.json
+ * @return float|null
+ */
+function bx_github_repositories_parse_price(mixed $raw): ?float
+{
+  if (is_string($raw) && strtolower(trim($raw)) === 'free') {
+    return 0.0;
+  }
+  if (is_numeric($raw)) {
+    return max(0.0, (float)$raw);
+  }
+  return null;
+}

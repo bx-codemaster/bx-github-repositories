@@ -18,15 +18,7 @@
  * - Schreiben von Status- und Ergebnisdaten in Modultabellen.
  *
  * Nicht-Ziele:
- * - Keine eigenständige Core-Anpassung des modified-Downloadflusses.
  * - Keine dauerhafte Speicherung von Klartext-PEM.
- *
- * Laufzeitkontext:
- * - Die Datei wird innerhalb des modified-Admin-Kontexts ausgeführt.
- * - includes/application_top.php initialisiert Konstanten, Session,
- *   Datenbankverbindung, MessageStack und Auto-Includes.
- * - Zusätzliche Modul-Helfer aus includes/extra/functions werden durch
- *   application_top.php automatisch geladen.
  *
  * Sicherheitsprinzipien:
  * - PEM-Inhalte werden serverseitig geprüft.
@@ -971,6 +963,7 @@ require_once(DIR_WS_INCLUDES . 'head.php');
                         <td class="main bx-gh-col-local-filename"><strong><?php echo BX_GITHUB_REPOSITORIES_LABEL_LOCAL_FILENAME; ?></strong></td>
                         <td class="main bx-gh-col-zip-status"><strong>ZIP</strong></td>
                         <td class="main bx-gh-col-version"><strong><?php echo BX_GITHUB_REPOSITORIES_LABEL_VERSION; ?></strong></td>
+                        <td class="main bx-gh-col-version"><strong><?php echo ''; ?></strong></td>
                         <td class="main bx-gh-col-last-check"><strong><?php echo BX_GITHUB_REPOSITORIES_LABEL_LAST_CHECK; ?></strong></td>
                       </tr>
                       <?php if (count($repository_rows) === 0) { ?>
@@ -1025,16 +1018,31 @@ require_once(DIR_WS_INCLUDES . 'head.php');
                               <?php } ?>
                             </td>
                             <td class="main bx-gh-zip-status-cell">
-                              <span class="bx-gh-zip-dot <?php echo $local_file_exists ? 'bx-gh-zip-dot-present' : 'bx-gh-zip-dot-missing'; ?>" title="<?php echo $local_file_exists ? 'ZIP vorhanden' : 'ZIP fehlt'; ?>"></span>
+                              <?php 
+                              if ($zip_download_required) { 
+                                if ((int)$repository_row['status'] === 1) { ?>
+                                  <div class="bx-gh-inline-download">
+                                    <button type="submit" class="button bx-gh-button-red" name="action" value="sync_releases" onclick="document.getElementById('sync_repository_id').value='<?php echo (int)$repository_row['repositories_id']; ?>';">
+                                      <?php echo BX_GITHUB_REPOSITORIES_BUTTON_DOWNLOAD_REPOSITORY; ?>
+                                    </button>
+                                  </div>
+                              <?php
+                                 }
+                               } else {
+                                 echo '<span class="bx-gh-zip-dot bx-gh-zip-dot-present" title="ZIP vorhanden"></span>';
+                               }
+                              ?>
                             </td>
                             <td class="main bx-gh-version-cell">
                               <?php echo $repository_row['current_tag_name'] !== null ? htmlspecialchars((string)$repository_row['current_tag_name'], ENT_QUOTES, 'UTF-8') : '&ndash;'; ?>
+                            </td>
+                            <td class="main bx-gh-version-cell">
 
                               <div class="bx-gh-inline-download">
                                 <?php if ($has_mapped_product) { ?>
                                   <button
                                     type="submit"
-                                    class="button bx-gh-button-delete"
+                                    class="button bx-gh-button-red"
                                     name="action"
                                     value="delete_product"
                                     onclick="document.getElementById('product_repository_id').value='<?php echo (int)$repository_row['repositories_id']; ?>'; return confirm('<?php echo addslashes(BX_GITHUB_REPOSITORIES_TEXT_CONFIRM_DELETE_PRODUCT); ?>');"
@@ -1054,15 +1062,6 @@ require_once(DIR_WS_INCLUDES . 'head.php');
                                 <?php } ?>
                               </div>
 
-                              <?php if ($zip_download_required) { ?>
-                                <?php if ((int)$repository_row['status'] === 1) { ?>
-                                  <div class="bx-gh-inline-download">
-                                    <button type="submit" class="button bx-gh-download-repo-btn" name="action" value="sync_releases" onclick="document.getElementById('sync_repository_id').value='<?php echo (int)$repository_row['repositories_id']; ?>';">
-                                      <?php echo BX_GITHUB_REPOSITORIES_BUTTON_DOWNLOAD_REPOSITORY; ?>
-                                    </button>
-                                  </div>
-                                <?php } ?>
-                              <?php } ?>
                             </td>
                             <td class="main bx-gh-lastcheck-cell">
                               <?php echo $repository_row['last_check_at'] !== null ? htmlspecialchars((string)$repository_row['last_check_at'], ENT_QUOTES, 'UTF-8') : '&ndash;'; ?>

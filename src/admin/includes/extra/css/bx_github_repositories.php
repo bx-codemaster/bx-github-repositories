@@ -226,6 +226,7 @@
     line-height: 1.2;
     padding: 2px 8px;
     min-height: auto;
+    white-space: nowrap;
   }
 
   .bx-gh-lastcheck-cell {
@@ -471,12 +472,13 @@
     border-color: #218838 !important;
   }
   
-  .bx-gh-button-delete {
+  .bx-gh-button-red {
     background-color: #dc3545 !important;
     border-color: #dc3545 !important;
     color: white !important;
+    white-space: nowrap;
   }
-  .bx-gh-button-delete:hover {
+  .bx-gh-button-red:hover {
     background-color: #c82333 !important;
     border-color: #c82333 !important;
   }

@@ -11,7 +11,7 @@ switch ($_SESSION['language_code']) {
     break;
 }
 
-$add_contents[BOX_HEADING_TOOLS][] = array(
+$add_contents[BOX_HEADING_BX_MODULES][] = array(
   'admin_access_name' => 'bx_github_repositories',
   'filename'          => 'bx_github_repositories.php',
   'boxname'           => MODULE_BX_GITHUB_REPOSITORIES_MENU_TITLE,

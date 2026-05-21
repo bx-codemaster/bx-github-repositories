@@ -107,7 +107,30 @@ Important:
 
 ---
 
-## Step 7: Load repository list and set selection
+## Step 7: Create and configure the template product
+Before the first download products can be created, a template product must exist in the shop.
+
+1. Create a new product in the desired target category in the shop admin.
+2. Maintain this product explicitly as a template and do not use it as a regular sellable product.
+3. Set the template product to `inactive` and keep it inactive permanently.
+4. Set the `sort order` of the template product to `9999`.
+5. Maintain all default values that should later be inherited by automatically created products.
+6. Assign a download entry to the template product in the product option values `Downloads`.
+7. Deliberately assign the file `dummy.zip` as the download file for this template.
+8. Particularly important are the category assignment, tax class, and any other desired default product settings.
+9. Note the `products_id` of this template product.
+10. Store this ID in the module settings as `Template Product ID`.
+
+Important:
+- The template product is only a blueprint and always remains inactive.
+- Newly created repository products are copied from this template.
+- The first download attribute of the template product is copied as well.
+- The assigned file `dummy.zip` is automatically replaced in the created repository product with the filename of the respective repository ZIP.
+- The template defines the category assignment and many other default parameters of the automatically created products.
+
+---
+
+## Step 8: Load repository list and set selection
 1. After a successful connection test, load the repository list.
 2. Select the required repositories and save the selection.
 3. Download repositories.

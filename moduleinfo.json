@@ -7,8 +7,8 @@
     "website": "https://www.der-eisenhans.de",
     "srcDir": "src",
     "version": "auto",
-    "shortDescription": "BX Github Repositories - Das Modul lädt die aktuellsten Repositories.",
-    "description": "BX Github Repositories lädt die aktuellsten Repositories von Github. Es bietet eine einfache Möglichkeit, die neuesten Zip-Dateien in den Downloadorder zu laden.",
+    "shortDescription": "BX Github Repositories - Das Modul verwaltet Ihre Repositories auf Github.com.",
+    "description": "Mit BX Github Repositories können sie Ihre Repositories auf Github überwachen. Sie können die Repositories automatisch in den Download-Ordner ihres Shops laden und automatisch ein Produkt für ihren Shop kreieren.",
     "price": "free", 
     "date": "2026-04-20 00:00:00",
     "php": {

@@ -106,7 +106,30 @@ Wichtig:
 
 ---
 
-## Schritt 7: Repository-Liste laden und Auswahl festlegen
+## Schritt 7: Template-Produkt anlegen und konfigurieren
+Vor dem ersten Anlegen von Download-Produkten muss ein Template-Produkt im Shop vorhanden sein.
+
+1. Im Shop-Admin ein neues Produkt in der gewünschten Ziel-Kategorie anlegen.
+2. Dieses Produkt bewusst als Template pflegen, also nicht als regulär verkaufbares Produkt verwenden.
+3. Das Template-Produkt auf `inaktiv` setzen und dauerhaft inaktiv lassen.
+4. Die `Sortorder` des Template-Produkts auf `9999` setzen.
+5. Alle Standardwerte pflegen, die später für automatisch angelegte Produkte übernommen werden sollen.
+6. Dem Template-Produkt in den Artikelmerkmalen `Downloads` einen Download-Eintrag zuordnen.
+7. Als Downloaddatei für dieses Template bewusst die Datei `dummy.zip` hinterlegen.
+8. Besonders wichtig sind außerdem Kategoriezuordnung, Steuerklasse und weitere gewünschte Produkt-Grundeinstellungen.
+9. Die `products_id` dieses Template-Produkts notieren.
+10. Diese ID in den Moduleinstellungen als `Template-Produkt ID` hinterlegen.
+
+Wichtig:
+- Das Template-Produkt ist nur eine Vorlage und bleibt immer inaktiv.
+- Neu angelegte Repository-Produkte werden aus diesem Template kopiert.
+- Das erste Download-Attribut des Template-Produkts wird mitkopiert.
+- Die hinterlegte Datei `dummy.zip` wird beim angelegten Repository-Produkt automatisch durch den Namen der jeweiligen Repository-ZIP ersetzt.
+- Das Template bestimmt insbesondere die Kategoriezuordnung und viele weitere Standardparameter der automatisch angelegten Produkte.
+
+---
+
+## Schritt 8: Repository-Liste laden und Auswahl festlegen
 1. Nach erfolgreichem Verbindungstest die Repository-Liste laden.
 2. Die gewünschten Repositories auswählen und Auswahl speichern.
 3. Repositories herunterladen

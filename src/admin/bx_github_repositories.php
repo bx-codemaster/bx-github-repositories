@@ -963,7 +963,7 @@ require_once(DIR_WS_INCLUDES . 'head.php');
                         <td class="main bx-gh-col-local-filename"><strong><?php echo BX_GITHUB_REPOSITORIES_LABEL_LOCAL_FILENAME; ?></strong></td>
                         <td class="main bx-gh-col-zip-status"><strong>ZIP</strong></td>
                         <td class="main bx-gh-col-version"><strong><?php echo BX_GITHUB_REPOSITORIES_LABEL_VERSION; ?></strong></td>
-                        <td class="main bx-gh-col-version"><strong><?php echo ''; ?></strong></td>
+                        <td class="main bx-gh-col-product"><strong><?php echo BX_GITHUB_REPOSITORIES_LABEL_PRODUCT; ?></strong></td>
                         <td class="main bx-gh-col-last-check"><strong><?php echo BX_GITHUB_REPOSITORIES_LABEL_LAST_CHECK; ?></strong></td>
                       </tr>
                       <?php if (count($repository_rows) === 0) { ?>
@@ -1009,13 +1009,17 @@ require_once(DIR_WS_INCLUDES . 'head.php');
                               <?php } ?>
                             </td>
                             <td class="main bx-gh-text-muted">
-                              <?php if ($local_file_exists) { ?>
-                                <a class="bx-gh-local-file-link" href="<?php echo htmlspecialchars($local_file_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" title="Datei im Download-Ordner öffnen">
-                                  <?php echo htmlspecialchars($local_filename_display, ENT_QUOTES, 'UTF-8'); ?>
-                                </a>
-                              <?php } else { ?>
-                                <span class="bx-gh-local-file-missing" title="Datei nicht im Download-Ordner gefunden"><?php echo htmlspecialchars($local_filename_display, ENT_QUOTES, 'UTF-8'); ?></span>
-                              <?php } ?>
+                              <?php
+                                if ($local_file_exists) {
+                                  if($_SESSION['customer_id'] === '1') {
+                                    echo '<a class="bx-gh-local-file-link" href="' . htmlspecialchars($local_file_url, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener noreferrer" title="' . htmlspecialchars(BX_GITHUB_REPOSITORIES_TEXT_OPEN_DOWNLOAD_FILE, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($local_filename_display, ENT_QUOTES, 'UTF-8').'</a>';
+                                  } else {
+                                    echo '<span class="bx-gh-local-file">' . htmlspecialchars($local_filename_display, ENT_QUOTES, 'UTF-8') . '</span>';
+                                  }
+                                } else {
+                                  echo '<span class="bx-gh-local-file-missing" title="' . htmlspecialchars(BX_GITHUB_REPOSITORIES_TEXT_DOWNLOAD_FILE_MISSING, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($local_filename_display, ENT_QUOTES, 'UTF-8') . '</span>';
+                                }
+                              ?>
                             </td>
                             <td class="main bx-gh-zip-status-cell">
                               <?php 
@@ -1029,14 +1033,14 @@ require_once(DIR_WS_INCLUDES . 'head.php');
                               <?php
                                  }
                                } else {
-                                 echo '<span class="bx-gh-zip-dot bx-gh-zip-dot-present" title="ZIP vorhanden"></span>';
+                                 echo '<span class="bx-gh-zip-dot bx-gh-zip-dot-present" title="' . htmlspecialchars(BX_GITHUB_REPOSITORIES_TEXT_ZIP_PRESENT, ENT_QUOTES, 'UTF-8') . '"></span>';
                                }
                               ?>
                             </td>
                             <td class="main bx-gh-version-cell">
                               <?php echo $repository_row['current_tag_name'] !== null ? htmlspecialchars((string)$repository_row['current_tag_name'], ENT_QUOTES, 'UTF-8') : '&ndash;'; ?>
                             </td>
-                            <td class="main bx-gh-version-cell">
+                            <td class="main bx-gh-product-cell">
 
                               <div class="bx-gh-inline-download">
                                 <?php if ($has_mapped_product) { ?>
@@ -1084,7 +1088,8 @@ require_once(DIR_WS_INCLUDES . 'head.php');
                   </div> <!-- #tab-repos -->
 
                   <div id="tab-manual" role="tabpanel" aria-labelledby="tab-link-manual" tabindex="0" hidden="hidden">
-                      <div class="main bx-gh-section-heading bx-gh-manual-heading">
+
+                  <div class="main bx-gh-section-heading bx-gh-manual-heading">
                         <strong><?php echo BX_GITHUB_REPOSITORIES_TEXT_MANUAL_HEADING; ?></strong>
                       </div>
                       <div class="main bx-gh-manual-text">
@@ -1154,7 +1159,7 @@ require_once(DIR_WS_INCLUDES . 'head.php');
   if (is_file(DIR_FS_CATALOG . $manual_download_path . $manual_download_file)) {
     $manual_download_link_html = '<a href="' . htmlspecialchars($manual_download_url, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener noreferrer">' . htmlspecialchars($manual_download_file, ENT_QUOTES, 'UTF-8') . '</a>';
   } else {
-    $manual_download_link_html = '<p style="margin: 0;">Datei fehlt</p>';
+    $manual_download_link_html = '<p style="margin: 0;">' . htmlspecialchars(BX_GITHUB_REPOSITORIES_TEXT_FILE_MISSING, ENT_QUOTES, 'UTF-8') . '</p>';
   }
 
   $heading  = array();

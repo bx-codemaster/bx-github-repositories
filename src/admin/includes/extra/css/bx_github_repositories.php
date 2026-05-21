@@ -215,7 +215,7 @@
   }
 
   .bx-gh-inline-download {
-    margin-top: 4px;
+    /* margin-top: 4px; */
   }
 
   .bx-gh-download-repo-btn {

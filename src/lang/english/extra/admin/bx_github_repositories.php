@@ -11,8 +11,8 @@
 	---------------------------------------------------------------------------------------*/
 
 define('BX_GITHUB_REPOSITORIES_HEADING_TITLE', 'BX GitHub Repositories');
-define('BX_GITHUB_REPOSITORIES_HEADING_SUB_TITLE', 'Phase 1 base structure is ready');
-define('BX_GITHUB_REPOSITORIES_TEXT_INTRO', 'The base files are in place. Business logic will follow in the next phases.');
+define('BX_GITHUB_REPOSITORIES_HEADING_SUB_TITLE', 'Repository and release management');
+define('BX_GITHUB_REPOSITORIES_TEXT_INTRO', 'This module synchronizes GitHub releases with download products.');
 define('BX_GITHUB_REPOSITORIES_TEXT_SETUP_HEADING', 'Setup Assistant');
 define('BX_GITHUB_REPOSITORIES_TEXT_SETUP_DESCRIPTION', 'This area prepares the future admin UI for customer-specific setup.');
 define('BX_GITHUB_REPOSITORIES_TEXT_SETUP_GOAL', 'The goal is to collect shop-specific GitHub app data and select the repositories to sync.');
@@ -77,7 +77,12 @@ define('BX_GITHUB_REPOSITORIES_BUTTON_DOWNLOAD_REPOSITORY', 'Update ZIP');
 define('BX_GITHUB_REPOSITORIES_BUTTON_CREATE_PRODUCT', 'Create Product');
 define('BX_GITHUB_REPOSITORIES_BUTTON_DELETE_PRODUCT', 'Delete Product');
 define('BX_GITHUB_REPOSITORIES_LABEL_VERSION', 'Version');
+define('BX_GITHUB_REPOSITORIES_LABEL_PRODUCT', 'Product');
 define('BX_GITHUB_REPOSITORIES_LABEL_LAST_CHECK', 'Last Check');
+define('BX_GITHUB_REPOSITORIES_TEXT_OPEN_DOWNLOAD_FILE', 'Open file in download folder');
+define('BX_GITHUB_REPOSITORIES_TEXT_DOWNLOAD_FILE_MISSING', 'File not found in download folder');
+define('BX_GITHUB_REPOSITORIES_TEXT_ZIP_PRESENT', 'ZIP available');
+define('BX_GITHUB_REPOSITORIES_TEXT_FILE_MISSING', 'File missing');
 define('BX_GITHUB_REPOSITORIES_INFO_NO_ACTIVE_REPOSITORIES', 'No active repositories selected.');
 define('BX_GITHUB_REPOSITORIES_INFO_REPOSITORY_ALREADY_CURRENT', 'The ZIP file is already up to date.');
 define('BX_GITHUB_REPOSITORIES_SUCCESS_REPOSITORY_DOWNLOADED', 'ZIP file for %s was updated to %s.');

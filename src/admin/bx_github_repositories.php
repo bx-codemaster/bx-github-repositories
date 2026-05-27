@@ -90,6 +90,24 @@ while ($repository_row = xtc_db_fetch_array($repository_query)) {
 
 $current_action = isset($_POST['action']) ? trim((string)$_POST['action']) : '';
 
+if (!function_exists('bx_github_repositories_ajax_response')) {
+  /**
+   * Gibt eine JSON-Antwort aus und beendet die Ausfuehrung.
+   *
+   * @param array $payload
+   * @param int   $http_status
+   *
+   * @return never
+   */
+  function bx_github_repositories_ajax_response(array $payload, int $http_status = 200): void
+  {
+    http_response_code($http_status);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit();
+  }
+}
+
 if ($current_action === 'save_settings') {
   $posted_app_id          = trim((string)($_POST['github_app_id'] ?? ''));
   $posted_installation_id = trim((string)($_POST['github_installation_id'] ?? ''));
@@ -389,6 +407,219 @@ if ($current_action === 'save_repository_selection') {
   }
   xtc_redirect(xtc_href_link(BX_FILENAME_GITHUB_REPOSITORIES));
   exit();
+}
+
+if ($current_action === 'store_mass_action_summary_ajax') {
+  $summary_message = trim((string)($_POST['summary_message'] ?? ''));
+  $summary_type = trim((string)($_POST['summary_type'] ?? 'info'));
+
+  if (!in_array($summary_type, ['success', 'warning', 'error'], true)) {
+    $summary_type = 'success';
+  }
+
+  if ($summary_message !== '') {
+    $messageStack->add_session(mb_substr($summary_message, 0, 4000), $summary_type);
+  }
+
+  bx_github_repositories_ajax_response([
+    'success' => true,
+  ]);
+}
+
+if ($current_action === 'create_product_ajax') {
+  $product_repository_id = (int)($_POST['product_repository_id'] ?? 0);
+  if ($product_repository_id <= 0) {
+    bx_github_repositories_ajax_response([
+      'success' => false,
+      'message' => BX_GITHUB_REPOSITORIES_ERROR_INVALID_REPOSITORY_SELECTION,
+    ], 400);
+  }
+
+  $repo_query = xtc_db_query(
+    "SELECT repositories_id,
+                  owner_name,
+                  repo_name,
+                  local_filename_stable,
+                  current_tag_name,
+                  product_id,
+                  products_attributes_id
+       FROM " . TABLE_BX_GITHUB_REPOSITORIES . "
+      WHERE repositories_id = " . $product_repository_id . "
+      LIMIT 1"
+  );
+
+  if (xtc_db_num_rows($repo_query) === 0) {
+    bx_github_repositories_ajax_response([
+      'success' => false,
+      'message' => BX_GITHUB_REPOSITORIES_ERROR_INVALID_REPOSITORY_SELECTION,
+    ], 404);
+  }
+
+  $repo_data = xtc_db_fetch_array($repo_query);
+  $owner                 = (string)$repo_data['owner_name'];
+  $repo_name             = (string)$repo_data['repo_name'];
+  $local_file            = (string)$repo_data['local_filename_stable'];
+  $current_product_id    = (int)($repo_data['product_id'] ?? 0);
+  $current_attributes_id = (int)($repo_data['products_attributes_id'] ?? 0);
+
+  $template_product_id = defined('MODULE_BX_GITHUB_REPOSITORIES_TEMPLATE_PRODUCT_ID')
+    ? (int)constant('MODULE_BX_GITHUB_REPOSITORIES_TEMPLATE_PRODUCT_ID')
+    : 0;
+
+  if ($template_product_id <= 0) {
+    bx_github_repositories_ajax_response([
+      'success' => false,
+      'message' => BX_GITHUB_REPOSITORIES_ERROR_NO_TEMPLATE_PRODUCT,
+    ], 400);
+  }
+
+  if ((int)$current_app_id_value <= 0 || (int)$current_installation_id_value <= 0 || $current_private_key_encrypted_value === '') {
+    bx_github_repositories_ajax_response([
+      'success' => false,
+      'message' => BX_GITHUB_REPOSITORIES_ERROR_MISSING_CONNECTION_SETTINGS,
+    ], 400);
+  }
+
+  try {
+    $crypto      = new bx_github_repositories_crypto();
+    $private_key = $crypto->decryptToken($current_private_key_encrypted_value);
+    $token_data  = bx_github_repositories_create_installation_token((int)$current_app_id_value, (int)$current_installation_id_value, $private_key);
+    $sync_token  = (string)$token_data['token'];
+
+    $tag_name = trim((string)($repo_data['current_tag_name'] ?? ''));
+    if ($tag_name === '') {
+      $tag_info = bx_github_repositories_fetch_latest_tag($owner, $repo_name, $sync_token);
+      $tag_name = (string)$tag_info['tag_name'];
+    }
+
+    $moduleinfo = bx_github_repositories_fetch_moduleinfo_json($owner, $repo_name, $sync_token);
+    $product_service = new bx_github_repositories_product_service();
+
+    $mapping = $product_service->ensureProduct(
+      (int)$repo_data['repositories_id'],
+      $current_product_id,
+      $current_attributes_id,
+      $template_product_id,
+      $local_file,
+      $owner,
+      $repo_name,
+      $sync_token,
+      $tag_name,
+      $moduleinfo
+    );
+
+    $moduleinfo_hash_sql = $moduleinfo !== null
+      ? "'" . xtc_db_input(hash('sha256', (string)json_encode($moduleinfo))) . "'"
+      : 'NULL';
+
+    xtc_db_query(
+      "UPDATE " . TABLE_BX_GITHUB_REPOSITORIES . "
+          SET moduleinfo_ref_tag       = '" . xtc_db_input($tag_name) . "',
+              moduleinfo_hash          = " . $moduleinfo_hash_sql . ",
+              moduleinfo_last_fetch_at = now(),
+              product_sync_error       = NULL
+        WHERE repositories_id = " . (int)$repo_data['repositories_id']
+    );
+
+    bx_github_repositories_ajax_response([
+      'success' => true,
+      'message' => 'Produkt synchronisiert.',
+      'repository' => $owner . '/' . $repo_name,
+      'product_id' => (int)$mapping['product_id'],
+      'repositories_id' => (int)$repo_data['repositories_id'],
+    ]);
+  } catch (Exception $e) {
+    $error_msg = mb_substr($e->getMessage(), 0, 500);
+    xtc_db_query(
+      "UPDATE " . TABLE_BX_GITHUB_REPOSITORIES . "
+          SET product_sync_error = '" . xtc_db_input($error_msg) . "'
+        WHERE repositories_id = " . (int)$repo_data['repositories_id']
+    );
+
+    bx_github_repositories_ajax_response([
+      'success' => false,
+      'message' => $error_msg,
+      'repository' => (string)$repo_data['owner_name'] . '/' . (string)$repo_data['repo_name'],
+      'repositories_id' => (int)$repo_data['repositories_id'],
+    ], 500);
+  }
+}
+
+if ($current_action === 'delete_product_ajax') {
+  $product_repository_id = (int)($_POST['product_repository_id'] ?? 0);
+  if ($product_repository_id <= 0) {
+    bx_github_repositories_ajax_response([
+      'success' => false,
+      'message' => BX_GITHUB_REPOSITORIES_ERROR_INVALID_REPOSITORY_SELECTION,
+    ], 400);
+  }
+
+  $repo_query = xtc_db_query(
+    "SELECT repositories_id, owner_name, repo_name, product_id
+       FROM " . TABLE_BX_GITHUB_REPOSITORIES . "
+      WHERE repositories_id = " . $product_repository_id . "
+      LIMIT 1"
+  );
+
+  if (xtc_db_num_rows($repo_query) === 0) {
+    bx_github_repositories_ajax_response([
+      'success' => false,
+      'message' => BX_GITHUB_REPOSITORIES_ERROR_INVALID_REPOSITORY_SELECTION,
+    ], 404);
+  }
+
+  $repo_data = xtc_db_fetch_array($repo_query);
+  $product_id = (int)($repo_data['product_id'] ?? 0);
+
+  if ($product_id <= 0) {
+    bx_github_repositories_ajax_response([
+      'success' => true,
+      'message' => 'Kein Katalog-Produkt vorhanden.',
+      'repository' => (string)$repo_data['owner_name'] . '/' . (string)$repo_data['repo_name'],
+      'repositories_id' => (int)$repo_data['repositories_id'],
+      'product_id' => 0,
+    ]);
+  }
+
+  try {
+    $product_exists_query = xtc_db_query(
+      "SELECT products_id
+         FROM " . TABLE_PRODUCTS . "
+        WHERE products_id = " . $product_id . "
+        LIMIT 1"
+    );
+
+    if (xtc_db_num_rows($product_exists_query) > 0) {
+      require_once(DIR_WS_CLASSES . 'categories.php');
+      $categories = new categories();
+      $categories->remove_product($product_id);
+    }
+
+    xtc_db_query(
+      "UPDATE " . TABLE_BX_GITHUB_REPOSITORIES . "
+          SET product_id              = 0,
+              products_attributes_id  = 0,
+              product_sync_error      = NULL,
+              updated_at              = now()
+        WHERE repositories_id = " . (int)$repo_data['repositories_id']
+    );
+
+    bx_github_repositories_ajax_response([
+      'success' => true,
+      'message' => 'Katalog-Produkt gelöscht.',
+      'repository' => (string)$repo_data['owner_name'] . '/' . (string)$repo_data['repo_name'],
+      'repositories_id' => (int)$repo_data['repositories_id'],
+      'product_id' => $product_id,
+    ]);
+  } catch (Exception $e) {
+    bx_github_repositories_ajax_response([
+      'success' => false,
+      'message' => mb_substr($e->getMessage(), 0, 500),
+      'repository' => (string)$repo_data['owner_name'] . '/' . (string)$repo_data['repo_name'],
+      'repositories_id' => (int)$repo_data['repositories_id'],
+      'product_id' => $product_id,
+    ], 500);
+  }
 }
 
 if ($current_action === 'create_product') {
@@ -942,11 +1173,15 @@ require_once(DIR_WS_INCLUDES . 'head.php');
                   </div> <!-- #tab-setup -->
 
                   <div id="tab-repos" role="tabpanel" aria-labelledby="tab-link-repos" tabindex="0" hidden="hidden">
-                    <div class="main bx-gh-section-heading bx-gh-repo-heading">
-                      <strong><?php echo BX_GITHUB_REPOSITORIES_TEXT_REPOSITORY_SELECTION_HEADING; ?></strong>
-                    </div>
-                    <div class="main bx-gh-repo-intro">
-                      <?php echo BX_GITHUB_REPOSITORIES_TEXT_REPOSITORY_SELECTION_INTRO; ?>
+                    <div class="main bx-gh-section-heading bx-gh-repo-header-layout">
+                      <div class="bx-gh-repo-header-left">
+                        <div class="main bx-gh-section-heading bx-gh-repo-heading">
+                          <strong><?php echo BX_GITHUB_REPOSITORIES_TEXT_REPOSITORY_SELECTION_HEADING; ?></strong>
+                        </div>
+                        <div class="main bx-gh-repo-intro">
+                          <?php echo BX_GITHUB_REPOSITORIES_TEXT_REPOSITORY_SELECTION_INTRO; ?>
+                        </div>
+                      </div>
                     </div>
 
                     <?php echo xtc_draw_form('github_repositories_selection_form', BX_FILENAME_GITHUB_REPOSITORIES, '', 'post'); ?>
@@ -1133,12 +1368,16 @@ require_once(DIR_WS_INCLUDES . 'head.php');
 
   $heading[]  = array('text' => '<strong>'.BX_GITHUB_REPOSITORIES_TEXT_REPOSITORY_SELECTION_HEADING.'</strong>');
   $contents[] = array('text' =>  xtc_draw_form('github_repositories_load_form', BX_FILENAME_GITHUB_REPOSITORIES, '', 'post')
-                      .'<button type="submit" class="button" name="action" value="load_repositories">'
+                      .'<button type="submit" class="button bx_box_right" name="action" value="load_repositories">'
                       .BX_GITHUB_REPOSITORIES_BUTTON_LOAD_REPOSITORIES.'</button></form>');
 
-    $contents[] = array('text' => xtc_draw_form('github_repositories_sync_form', BX_FILENAME_GITHUB_REPOSITORIES, '', 'post')
-                      .'<button type="submit" class="button" name="action" value="sync_releases">'
+  $contents[] = array('text' => xtc_draw_form('github_repositories_sync_form', BX_FILENAME_GITHUB_REPOSITORIES, '', 'post')
+                      .'<button type="submit" class="button bx_box_right" name="action" value="sync_releases">'
                       .BX_GITHUB_REPOSITORIES_BUTTON_SYNC_RELEASES.'</button></form>');
+
+  $contents[] = array('text' => '<button type="button" id="bx-gh-mass-create" class="button bx-gh-button-create bx_box_right">Alle Produkte erstellen</button>');
+
+  $contents[] = array('text' => '<button type="button" id="bx-gh-mass-delete" class="button bx-gh-button-red bx_box_right">Alle Produkte löschen</button>');
 
   if ( (xtc_not_null($heading)) && (xtc_not_null($contents)) ) {
     $box = new box;
@@ -1152,12 +1391,12 @@ require_once(DIR_WS_INCLUDES . 'head.php');
 
   $manual_language_code = strtoupper($_SESSION['language_code'] ?? 'DE');
 /** pub/INSTALLATION_SHOP_OPERATOR_DE.pdf */
-  $manual_download_file = rawurlencode('c' . $manual_language_code . '.pdf');
+  $manual_download_file = rawurlencode('INSTALLATION_SHOP_OPERATOR_' . $manual_language_code . '.pdf');
   $manual_download_path = 'pub/';
   $manual_download_url  = xtc_href_link_admin($manual_download_path . $manual_download_file);
 
   if (is_file(DIR_FS_CATALOG . $manual_download_path . $manual_download_file)) {
-    $manual_download_link_html = '<a href="' . htmlspecialchars($manual_download_url, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener noreferrer">' . htmlspecialchars($manual_download_file, ENT_QUOTES, 'UTF-8') . '</a>';
+    $manual_download_link_html = '<a class="button bx-gh-button-create bx_box_right" href="' . htmlspecialchars($manual_download_url, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener noreferrer">' . htmlspecialchars($manual_download_file, ENT_QUOTES, 'UTF-8') . '</a>';
   } else {
     $manual_download_link_html = '<p style="margin: 0;">' . htmlspecialchars(BX_GITHUB_REPOSITORIES_TEXT_FILE_MISSING, ENT_QUOTES, 'UTF-8') . '</p>';
   }
@@ -1185,92 +1424,6 @@ require_once(DIR_WS_INCLUDES . 'head.php');
 </table>
 
 <?php require(DIR_WS_INCLUDES.'footer.php'); ?>
-<script>
-  (function () {
-    var overlay = document.getElementById('bx-github-loading-overlay');
-    if (!overlay) {
-      return;
-    }
-
-    var longRunningActions = {
-      load_repositories: true,
-      sync_releases: true
-    };
-
-    var showOverlay = function () {
-      overlay.style.display = 'flex';
-    };
-
-    var forms = document.getElementsByTagName('form');
-
-    for (var i = 0; i < forms.length; i++) {
-      forms[i].addEventListener('submit', function (event) {
-        var form = event.target;
-        var submitter = event.submitter || null;
-        var actionValue = '';
-
-        if (submitter && submitter.name === 'action') {
-          actionValue = submitter.value;
-        }
-
-        if (!actionValue && document.activeElement && document.activeElement.name === 'action') {
-          actionValue = document.activeElement.value;
-        }
-
-        if (!actionValue) {
-          var hiddenActionInput = form.querySelector('input[name="action"]');
-          if (hiddenActionInput) {
-            actionValue = hiddenActionInput.value;
-          }
-        }
-
-        if (longRunningActions[actionValue]) {
-          showOverlay();
-        }
-      });
-    }
-
-    var selectionForm = document.querySelector('form[name="github_repositories_selection_form"]');
-    var selectAllInput = document.getElementById('select_all_repositories');
-
-    if (!selectionForm || !selectAllInput) {
-      return;
-    }
-
-    var repoCheckboxes = selectionForm.querySelectorAll('input[name="selected_repositories[]"]');
-    if (!repoCheckboxes.length) {
-      selectAllInput.checked = false;
-      selectAllInput.disabled = true;
-      return;
-    }
-
-    var updateSelectAllState = function () {
-      var checkedCount = 0;
-
-      for (var j = 0; j < repoCheckboxes.length; j++) {
-        if (repoCheckboxes[j].checked) {
-          checkedCount++;
-        }
-      }
-
-      selectAllInput.checked = checkedCount === repoCheckboxes.length;
-      selectAllInput.indeterminate = checkedCount > 0 && checkedCount < repoCheckboxes.length;
-    };
-
-    selectAllInput.addEventListener('change', function () {
-      for (var j = 0; j < repoCheckboxes.length; j++) {
-        repoCheckboxes[j].checked = selectAllInput.checked;
-      }
-      selectAllInput.indeterminate = false;
-    });
-
-    for (var j = 0; j < repoCheckboxes.length; j++) {
-      repoCheckboxes[j].addEventListener('change', updateSelectAllState);
-    }
-
-    updateSelectAllState();
-  })();
-</script>
 </body>
 </html>
 <?php require(DIR_WS_INCLUDES.'application_bottom.php'); ?>

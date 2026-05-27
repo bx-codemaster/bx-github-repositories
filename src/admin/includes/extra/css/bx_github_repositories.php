@@ -33,6 +33,9 @@
     padding: 4px 0 2px 0;
     line-height: 30px;
   }
+  button.bx_box_right {
+    min-width: 200px;
+  }
 
   #headboard .main {
     margin: 5px 10px;
@@ -55,7 +58,7 @@
   }
 
   .bx-gh-section-heading {
-    margin: 14px 0 8px;
+    margin: 6px 0 8px;
   }
 
   .bx-gh-section-text {
@@ -93,13 +96,50 @@
     margin-left: 8px;
   }
 
-  .bx-gh-repo-heading,
-  .bx-gh-manual-heading {
+  .bx-gh-repo-intro {
+    margin-bottom: 8px;
+  }
+
+  .bx-gh-repo-header-layout {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .bx-gh-repo-header-left {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .bx-gh-repo-header-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 8px;
     margin-top: 16px;
   }
 
-  .bx-gh-repo-intro {
-    margin-bottom: 8px;
+  .bx-gh-right-mass-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  @media (max-width: 900px) {
+    .bx-gh-repo-header-layout {
+      flex-direction: column;
+    }
+
+    .bx-gh-repo-header-actions {
+      align-items: flex-start;
+      margin-top: 4px;
+    }
   }
 
   .bx-gh-col-local-filename {
@@ -212,10 +252,6 @@
     color: #444;
     font-size: 12px;
     text-align: center;
-  }
-
-  .bx-gh-inline-download {
-    /* margin-top: 4px; */
   }
 
   .bx-gh-download-repo-btn {

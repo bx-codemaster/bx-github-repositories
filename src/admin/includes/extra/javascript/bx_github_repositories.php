@@ -124,6 +124,260 @@
 				}, 3000);
 			}
 		}
+
+		const overlay = document.getElementById('bx-github-loading-overlay');
+		const longRunningActions = {
+			load_repositories: true,
+			sync_releases: true
+		};
+
+		if (overlay) {
+			const showOverlay = function () {
+				overlay.style.display = 'flex';
+			};
+
+			const forms = document.getElementsByTagName('form');
+			for (let i = 0; i < forms.length; i++) {
+				forms[i].addEventListener('submit', function (event) {
+					const form = event.target;
+					const submitter = event.submitter || null;
+					let actionValue = '';
+
+					if (submitter && submitter.name === 'action') {
+						actionValue = submitter.value;
+					}
+
+					if (!actionValue && document.activeElement && document.activeElement.name === 'action') {
+						actionValue = document.activeElement.value;
+					}
+
+					if (!actionValue) {
+						const hiddenActionInput = form.querySelector('input[name="action"]');
+						if (hiddenActionInput) {
+							actionValue = hiddenActionInput.value;
+						}
+					}
+
+					if (longRunningActions[actionValue]) {
+						showOverlay();
+					}
+				});
+			}
+		}
+
+		const selectionForm = document.querySelector('form[name="github_repositories_selection_form"]');
+		const selectAllInput = document.getElementById('select_all_repositories');
+		if (!selectionForm || !selectAllInput) {
+			return;
+		}
+
+		const repoCheckboxes = selectionForm.querySelectorAll('input[name="selected_repositories[]"]');
+		if (!repoCheckboxes.length) {
+			selectAllInput.checked = false;
+			selectAllInput.disabled = true;
+			return;
+		}
+
+		const updateSelectAllState = function () {
+			let checkedCount = 0;
+			for (let j = 0; j < repoCheckboxes.length; j++) {
+				if (repoCheckboxes[j].checked) {
+					checkedCount++;
+				}
+			}
+
+			selectAllInput.checked = checkedCount === repoCheckboxes.length;
+			selectAllInput.indeterminate = checkedCount > 0 && checkedCount < repoCheckboxes.length;
+		};
+
+		selectAllInput.addEventListener('change', function () {
+			for (let j = 0; j < repoCheckboxes.length; j++) {
+				repoCheckboxes[j].checked = selectAllInput.checked;
+			}
+			selectAllInput.indeterminate = false;
+		});
+
+		for (let j = 0; j < repoCheckboxes.length; j++) {
+			repoCheckboxes[j].addEventListener('change', updateSelectAllState);
+		}
+
+		updateSelectAllState();
+
+		const massCreateButton = document.getElementById('bx-gh-mass-create');
+		const massDeleteButton = document.getElementById('bx-gh-mass-delete');
+
+		const getSelectedRepositoryIds = function () {
+			const ids = [];
+			for (let k = 0; k < repoCheckboxes.length; k++) {
+				if (repoCheckboxes[k].checked) {
+					ids.push(String(repoCheckboxes[k].value || '').trim());
+				}
+			}
+			return ids.filter(Boolean);
+		};
+
+		const setMassButtonsDisabled = function (disabled) {
+			if (massCreateButton) {
+				massCreateButton.disabled = disabled;
+			}
+			if (massDeleteButton) {
+				massDeleteButton.disabled = disabled;
+			}
+		};
+
+		const callMassAction = async function (actionName, repositoryId) {
+			const body = new URLSearchParams();
+
+			const formData = new FormData(selectionForm);
+			for (const entry of formData.entries()) {
+				const key = entry[0];
+				const value = entry[1];
+				if (key === 'selected_repositories[]') {
+					continue;
+				}
+				body.append(key, String(value));
+			}
+
+			body.set('action', actionName);
+			body.set('product_repository_id', repositoryId);
+
+			const response = await fetch(window.location.href, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+					'X-Requested-With': 'XMLHttpRequest',
+					'Accept': 'application/json'
+				},
+				credentials: 'same-origin',
+				body: body.toString()
+			});
+
+			let payload = null;
+			try {
+				payload = await response.json();
+			} catch (e) {
+				const rawText = await response.text();
+				const compactText = String(rawText || '').replace(/\s+/g, ' ').trim();
+				throw new Error('Ungültige Server-Antwort: ' + (compactText ? compactText.substring(0, 180) : 'leer'));
+			}
+
+			if (!response.ok || !payload || payload.success !== true) {
+				throw new Error((payload && payload.message) ? payload.message : 'Aktion fehlgeschlagen.');
+			}
+
+			return payload;
+		};
+
+		const persistMassSummary = async function (summaryMessage, summaryType) {
+			const body = new URLSearchParams();
+			const formData = new FormData(selectionForm);
+			for (const entry of formData.entries()) {
+				const key = entry[0];
+				const value = entry[1];
+				if (key === 'selected_repositories[]') {
+					continue;
+				}
+				body.append(key, String(value));
+			}
+
+			body.set('action', 'store_mass_action_summary_ajax');
+			body.set('summary_message', summaryMessage);
+			body.set('summary_type', summaryType);
+
+			try {
+				const response = await fetch(window.location.href, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+						'X-Requested-With': 'XMLHttpRequest',
+						'Accept': 'application/json'
+					},
+					credentials: 'same-origin',
+					body: body.toString()
+				});
+
+				if (!response.ok) {
+					return false;
+				}
+
+				const payload = await response.json();
+				return !!(payload && payload.success === true);
+			} catch (e) {
+				return false;
+			}
+		};
+
+		const runMassAction = async function (actionName, actionLabel, requireConfirm) {
+			const selectedIds = getSelectedRepositoryIds();
+			if (selectedIds.length === 0) {
+				alert('Bitte mindestens ein Repository auswählen.');
+				return;
+			}
+
+			if (requireConfirm) {
+				const confirmed = confirm('Sollen ' + selectedIds.length + ' ausgewählte Katalog-Produkte gelöscht werden?');
+				if (!confirmed) {
+					return;
+				}
+			}
+
+			setMassButtonsDisabled(true);
+			if (overlay) {
+				overlay.style.display = 'flex';
+			}
+
+			let successCount = 0;
+			let errorCount = 0;
+			const errorMessages = [];
+
+			for (let i = 0; i < selectedIds.length; i++) {
+				try {
+					await callMassAction(actionName, selectedIds[i]);
+					successCount++;
+				} catch (error) {
+					errorCount++;
+					if (errorMessages.length < 5) {
+						errorMessages.push((error && error.message) ? error.message : 'Unbekannter Fehler');
+					}
+				}
+			}
+
+			if (overlay) {
+				overlay.style.display = 'none';
+			}
+			setMassButtonsDisabled(false);
+
+			let summary = actionLabel + ' abgeschlossen. Erfolgreich: ' + successCount + ', Fehler: ' + errorCount + '.';
+			if (errorMessages.length > 0) {
+				summary += '\n\nBeispiele:\n- ' + errorMessages.join('\n- ');
+			}
+
+			let summaryType = 'success';
+			if (errorCount > 0 && successCount > 0) {
+				summaryType = 'warning';
+			} else if (errorCount > 0 && successCount === 0) {
+				summaryType = 'error';
+			}
+
+			const wasPersisted = await persistMassSummary(summary, summaryType);
+			if (!wasPersisted) {
+				alert(summary);
+			}
+
+			window.location.reload();
+		};
+
+		if (massCreateButton) {
+			massCreateButton.addEventListener('click', function () {
+				runMassAction('create_product_ajax', 'Massen-Erstellen', false);
+			});
+		}
+
+		if (massDeleteButton) {
+			massDeleteButton.addEventListener('click', function () {
+				runMassAction('delete_product_ajax', 'Massen-Löschen', true);
+			});
+		}
 	});
 </script>
 <?php } ?>

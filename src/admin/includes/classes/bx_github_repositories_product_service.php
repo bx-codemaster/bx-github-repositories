@@ -540,7 +540,7 @@ class bx_github_repositories_product_service
     if ($attributes_id === 0) {
       // Erstes Download-Attribut des Templates kopieren
       $tpl_attr_query = xtc_db_query(
-        "SELECT pa.options_id, pa.options_values_id, pa.options_values_price, pa.price_prefix" .
+        "SELECT pa.options_id, pa.options_values_id, pa.options_values_price, pa.price_prefix, pa.attributes_stock" .
         " FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa" .
         " INNER JOIN " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad" .
         "    ON pad.products_attributes_id = pa.products_attributes_id" .
@@ -553,14 +553,29 @@ class bx_github_repositories_product_service
         return 0;
       }
 
+      $insert_columns = [
+        'products_id',
+        'options_id',
+        'options_values_id',
+        'options_values_price',
+        'price_prefix',
+        'attributes_stock',
+      ];
+      $insert_values = [
+        (string)(int)$products_id,
+        (string)(int)$tpl_attr['options_id'],
+        (string)(int)$tpl_attr['options_values_id'],
+        "'" . xtc_db_input((string)$tpl_attr['options_values_price']) . "'",
+        "'" . xtc_db_input((string)$tpl_attr['price_prefix']) . "'",
+        isset($tpl_attr['attributes_stock'])
+          ? (string)(int)$tpl_attr['attributes_stock']
+          : '0',
+      ];
+
       xtc_db_query(
         "INSERT INTO " . TABLE_PRODUCTS_ATTRIBUTES .
-        " (products_id, options_id, options_values_id, options_values_price, price_prefix)" .
-        " VALUES (" . (int)$products_id . "," .
-        "         " . (int)$tpl_attr['options_id'] . "," .
-        "         " . (int)$tpl_attr['options_values_id'] . "," .
-        "         '" . xtc_db_input((string)$tpl_attr['options_values_price']) . "'," .
-        "         '" . xtc_db_input((string)$tpl_attr['price_prefix']) . "')"
+        " (" . implode(', ', $insert_columns) . ")" .
+        " VALUES (" . implode(', ', $insert_values) . ")"
       );
       $attributes_id = (int)xtc_db_insert_id();
     }

@@ -1152,7 +1152,7 @@ require_once(DIR_WS_INCLUDES . 'head.php');
 
   $manual_language_code = strtoupper($_SESSION['language_code'] ?? 'DE');
 /** pub/INSTALLATION_SHOP_OPERATOR_DE.pdf */
-  $manual_download_file = rawurlencode('INSTALLATION_SHOP_OPERATOR_' . $manual_language_code . '.pdf');
+  $manual_download_file = rawurlencode('c' . $manual_language_code . '.pdf');
   $manual_download_path = 'pub/';
   $manual_download_url  = xtc_href_link_admin($manual_download_path . $manual_download_file);
 

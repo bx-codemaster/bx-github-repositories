@@ -4,7 +4,7 @@
         "shop-root": {
             "hashes": {
                 "/admin/bx_github_download_repo.php": "2cc05e5e3fcc19d448cc9858ce44a6e0",
-                "/admin/bx_github_repositories.php": "161ba16b3f5026de2de17377d51e207c",
+                "/admin/bx_github_repositories.php": "59ff1051bd4c644db483d56e3b15c570",
                 "/admin/images/icons/heading/bx_github_repositories.png": "5a6d75b7efa4c9530133c2c022e559f8",
                 "/admin/includes/classes/bx_github_repositories_app_manager.php": "69eab803163c75de64715a03755208db",
                 "/admin/includes/classes/bx_github_repositories_client_factory.php": "188c83ca9669cf846e99c9e6cb6be5ea",

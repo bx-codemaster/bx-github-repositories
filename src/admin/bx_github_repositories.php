@@ -311,10 +311,12 @@ if ($current_action === 'load_repositories') {
         try {
           $latest_tag_info = bx_github_repositories_fetch_latest_tag($owner_name, $repo_name, $load_token);
           $latest_tag_name = (string)$latest_tag_info['tag_name'];
+          $local_filename_with_version = bx_github_repositories_build_stable_filename($owner_name, $repo_name, $latest_tag_name);
 
           xtc_db_query(
             "UPDATE " . TABLE_BX_GITHUB_REPOSITORIES . "
-                SET current_tag_name = '" . xtc_db_input($latest_tag_name) . "',
+                SET local_filename_stable = '" . xtc_db_input($local_filename_with_version) . "',
+                    current_tag_name = '" . xtc_db_input($latest_tag_name) . "',
                     last_check_at = now(),
                     last_error_message = NULL,
                     updated_at = now()
@@ -928,8 +930,8 @@ if ($current_action === 'sync_releases') {
       $tag_info    = bx_github_repositories_fetch_latest_tag($owner, $repo_name_str, $sync_token);
       $tag_name    = $tag_info['tag_name'];
       $zipball_url = $tag_info['zipball_url'];
-      $asset_name  = $local_file;
-      $target_path = $download_dir . $local_file;
+      $asset_name  = bx_github_repositories_build_stable_filename($owner, $repo_name_str, (string)$tag_name);
+      $target_path = $download_dir . $asset_name;
 
       if ($downloaded_tag !== '' && $downloaded_tag === $tag_name && is_file($target_path)) {
         xtc_db_query(
@@ -950,12 +952,20 @@ if ($current_action === 'sync_releases') {
 
       bx_github_repositories_download_asset($zipball_url, $sync_token, $target_path);
 
+      if ($local_file !== '' && $local_file !== $asset_name) {
+        $legacy_path = $download_dir . $local_file;
+        if (is_file($legacy_path)) {
+          @unlink($legacy_path);
+        }
+      }
+
       $file_size = file_exists($target_path) ? (int)filesize($target_path) : 0;
       $checksum  = file_exists($target_path) ? (string)hash_file('sha256', $target_path) : '';
 
       xtc_db_query(
         "UPDATE " . TABLE_BX_GITHUB_REPOSITORIES . "
-            SET current_tag_name     = '" . xtc_db_input($tag_name) . "',
+            SET local_filename_stable = '" . xtc_db_input($asset_name) . "',
+                current_tag_name      = '" . xtc_db_input($tag_name) . "',
                 current_release_name = '" . xtc_db_input($tag_name) . "',
                 current_asset_name   = '" . xtc_db_input($asset_name) . "',
                 current_asset_url    = '" . xtc_db_input($zipball_url) . "',
@@ -1396,7 +1406,7 @@ require_once(DIR_WS_INCLUDES . 'head.php');
   $manual_download_url  = xtc_href_link_admin($manual_download_path . $manual_download_file);
 
   if (is_file(DIR_FS_CATALOG . $manual_download_path . $manual_download_file)) {
-    $manual_download_link_html = '<a class="button bx-gh-button-create bx_box_right" href="' . htmlspecialchars($manual_download_url, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener noreferrer">' . htmlspecialchars($manual_download_file, ENT_QUOTES, 'UTF-8') . '</a>';
+    $manual_download_link_html = '<a class="button bx-gh-button-create bx_box_rightclear" href="' . htmlspecialchars($manual_download_url, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener noreferrer">' . htmlspecialchars($manual_download_file, ENT_QUOTES, 'UTF-8') . '</a>';
   } else {
     $manual_download_link_html = '<p style="margin: 0;">' . htmlspecialchars(BX_GITHUB_REPOSITORIES_TEXT_FILE_MISSING, ENT_QUOTES, 'UTF-8') . '</p>';
   }

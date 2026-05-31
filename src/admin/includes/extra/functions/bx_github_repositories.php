@@ -137,15 +137,28 @@ function bx_github_repositories_fetch_installation_repositories(string $installa
 
 /**
  * Erzeuge stabilen Dateinamen fuer ein Repository.
+ * Optional wird ein Tag/Version im Dateinamen hinterlegt.
  */
-function bx_github_repositories_build_stable_filename(string $owner, string $repo): string
+function bx_github_repositories_build_stable_filename(string $owner, string $repo, string $tag_name = ''): string
 {
   $base = strtolower(trim($owner . '-' . $repo));
   $base = preg_replace('/[^a-z0-9._-]+/', '-', $base);
   $base = trim((string)$base, '-._');
+
   if ($base === '') {
     $base = 'github-release';
   }
+
+  $tag_segment = trim($tag_name);
+  if ($tag_segment !== '') {
+    $tag_segment = strtolower($tag_segment);
+    $tag_segment = preg_replace('/[^a-z0-9._-]+/', '-', $tag_segment);
+    $tag_segment = trim((string)$tag_segment, '-._');
+    if ($tag_segment !== '') {
+      $base .= '-' . $tag_segment;
+    }
+  }
+
   return $base . '.zip';
 }
 

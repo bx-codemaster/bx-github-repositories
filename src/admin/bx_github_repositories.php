@@ -905,20 +905,17 @@ if ($current_action === 'sync_releases') {
     exit();
   }
 
-  $download_dir = rtrim((string)DIR_FS_CATALOG, '/\\') . DIRECTORY_SEPARATOR . 'download' . DIRECTORY_SEPARATOR;
+  $download_dir = rtrim((string)DIR_FS_DOWNLOAD, '/\\') . DIRECTORY_SEPARATOR;
   $sync_success = 0;
   $sync_errors  = 0;
   $sync_skipped = 0;
+  $cleanup_warnings = 0;
 
   foreach ($active_repos as $repo) {
     $repo_id            = (int)$repo['repositories_id'];
     $owner              = (string)$repo['owner_name'];
     $repo_name_str      = (string)$repo['repo_name'];
-    $local_file         = (string)$repo['local_filename_stable'];
-    $current_tag        = isset($repo['current_tag_name']) ? trim((string)$repo['current_tag_name']) : '';
     $downloaded_tag     = isset($repo['downloaded_tag_name']) ? trim((string)$repo['downloaded_tag_name']) : '';
-    $repo_product_id    = (int)($repo['product_id'] ?? 0);
-    $repo_attributes_id = (int)($repo['products_attributes_id'] ?? 0);
 
     xtc_db_query(
       "UPDATE " . TABLE_BX_GITHUB_REPOSITORIES . "
@@ -952,10 +949,48 @@ if ($current_action === 'sync_releases') {
 
       bx_github_repositories_download_asset($zipball_url, $sync_token, $target_path);
 
-      if ($local_file !== '' && $local_file !== $asset_name) {
-        $legacy_path = $download_dir . $local_file;
-        if (is_file($legacy_path)) {
-          @unlink($legacy_path);
+      // Alte Versionsdateien dieses Repositories bereinigen (neue Datei ausnehmen).
+      // Pattern 1: alle versionsbezogenen Dateien owner-repo-*.zip
+      // Pattern 2: historischer Basisname owner-repo.zip (falls noch vorhanden)
+      $repo_base_filename = bx_github_repositories_build_stable_filename($owner, $repo_name_str);
+      $repo_base_name = substr($repo_base_filename, 0, -4);
+      $cleanup_patterns = array_unique(array(
+        $download_dir . $repo_base_name . '-*.zip',
+        $download_dir . $repo_base_filename,
+      ));
+
+      foreach ($cleanup_patterns as $cleanup_pattern) {
+        $candidate_files = glob($cleanup_pattern);
+        if (!is_array($candidate_files)) {
+          continue;
+        }
+
+        foreach ($candidate_files as $candidate_file) {
+          if (!is_string($candidate_file) || $candidate_file === '') {
+            continue;
+          }
+
+          $candidate_name = basename($candidate_file);
+          if ($candidate_name === $asset_name) {
+            continue;
+          }
+
+          if (!is_file($candidate_file)) {
+            continue;
+          }
+
+          $deleted = @unlink($candidate_file);
+          // Unter Windows können Dateien kurzzeitig gelockt oder schreibgeschützt sein.
+          // Ein zweiter Versuch nach chmod erhöht die Erfolgsquote bei lokalen Setups.
+          if ($deleted === false && is_file($candidate_file)) {
+            @chmod($candidate_file, 0666);
+            $deleted = @unlink($candidate_file);
+          }
+
+          if ($deleted === false && is_file($candidate_file)) {
+            $cleanup_warnings++;
+            $messageStack->add_session(sprintf(BX_GITHUB_REPOSITORIES_WARNING_FILE_DELETE_FAILED, $candidate_name), 'warning');
+          }
         }
       }
 
@@ -1004,6 +1039,9 @@ if ($current_action === 'sync_releases') {
   $messageStack->add_session(sprintf(BX_GITHUB_REPOSITORIES_SUCCESS_SYNC_COMPLETED, $sync_success, $sync_errors), $msg_type);
   if ($sync_skipped > 0) {
     $messageStack->add_session(sprintf(BX_GITHUB_REPOSITORIES_INFO_SYNC_SKIPPED, $sync_skipped), 'info');
+  }
+  if ($cleanup_warnings > 0) {
+    $messageStack->add_session('Alte ZIP-Dateien konnten teilweise nicht entfernt werden. Bitte Dateirechte/Datei-Locks prüfen.', 'warning');
   }
   xtc_redirect(xtc_href_link(BX_FILENAME_GITHUB_REPOSITORIES));
   exit();
